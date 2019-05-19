@@ -1,5 +1,7 @@
 ###### Requirements without Version Specifiers ######`
 numpy
 scikit-optimize
+pillow
+matplotlib
 
 ###### Requirements with Version Specifiers ######`
