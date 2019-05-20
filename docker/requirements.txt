@@ -3,5 +3,6 @@ numpy
 scikit-optimize
 pillow
 matplotlib
+pytz
 
 ###### Requirements with Version Specifiers ######`
