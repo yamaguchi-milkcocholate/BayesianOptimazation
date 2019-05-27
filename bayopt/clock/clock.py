@@ -1,5 +1,6 @@
 import datetime
-from pytz from timezone
+from pytz import timezone
+
 
 def now_str():
     now = datetime.datetime.now(tz=datetime.timezone.utc)
