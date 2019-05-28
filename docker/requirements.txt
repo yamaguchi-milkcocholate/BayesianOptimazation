@@ -1,8 +1,12 @@
 ###### Requirements without Version Specifiers ######`
 numpy
-scikit-optimize
 pillow
 matplotlib
 pytz
+gpyopt
+GPy
+paramz
+scipy
+
 
 ###### Requirements with Version Specifiers ######`
