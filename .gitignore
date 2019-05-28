@@ -2,3 +2,9 @@
 \.idea/
 
 \.DS_Store
+
+bayopt/__pycache__/__init__\.cpython-36\.pyc
+
+bayopt/optimizer/__pycache__/
+
+*.pyc
