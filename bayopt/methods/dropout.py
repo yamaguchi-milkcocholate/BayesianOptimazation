@@ -206,7 +206,7 @@ class Dropout(BO):
     def _fill_in_dimensions(self, samples):
         full_num = self.space.objective_dimensionality
         subspace_idx = self.subspace_idx
-        embedded_inx = [i for i in range(full_num) if i not in subspace_idx]
+        embedded_idx = [i for i in range(full_num) if i not in subspace_idx]
 
         samples_ = list()
 
@@ -216,10 +216,10 @@ class Dropout(BO):
                 raise ValueError('samples already have been full-dimensionality')
 
             # Todo: other besides random
-            embedded_sample = initial_design('random', self.subspace, 1)[0]
+            embedded_sample = initial_design('random', get_subspace(space=self.space, subspace_idx=embedded_idx), 1)[0]
 
             sample_ = deepcopy(sample)
-            for emb_idx, insert_idx in enumerate(embedded_inx):
+            for emb_idx, insert_idx in enumerate(embedded_idx):
                 sample_ = np.insert(sample_, emb_idx, embedded_sample[emb_idx])
 
             samples_.append(sample_)
@@ -272,9 +272,9 @@ class Dropout(BO):
         self._save_model_parameter_values()
 
     def _update_subspace(self):
-        self.subspace_idx = np.random.choice(
+        self.subspace_idx = np.sort(np.random.choice(
             range(self.space.objective_dimensionality),
-            self.subspace_dim_size, replace=False)
+            self.subspace_dim_size, replace=False))
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
 
     def _sign(self, f):
