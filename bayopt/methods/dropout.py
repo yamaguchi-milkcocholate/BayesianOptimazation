@@ -1,20 +1,18 @@
 from GPyOpt.core.bo import BO
-from GPyOpt.core.evaluators import Sequential
 from GPyOpt.core.task.cost import CostModel
 from GPyOpt.core.task.objective import SingleObjective
 from GPyOpt.models.gpmodel import GPModel
 from GPyOpt.optimization.acquisition_optimizer import AcquisitionOptimizer
 from GPyOpt.optimization.acquisition_optimizer import ContextManager
-from GPyOpt.acquisitions.LCB import AcquisitionLCB
 from GPyOpt.experiment_design import initial_design
 from GPyOpt.util.general import normalize
 from GPyOpt.util.duplicate_manager import DuplicateManager
 from GPyOpt.util.arguments_manager import ArgumentsManager
 from bayopt.space.space import initialize_space
 from bayopt.space.space import get_subspace
+from bayopt.clock.stopwatch import StopWatch
 from copy import deepcopy
 import numpy as np
-import time
 
 
 class Dropout(BO):
@@ -36,7 +34,6 @@ class Dropout(BO):
         constraints (dict | None):
         space (Design_space):
         model (BOModel):
-        acquisition_optimizer (AcquisitionOptimizer):
         acquisition (AcquisitionBase):
         cost (CostModel):
     """
@@ -44,45 +41,67 @@ class Dropout(BO):
     def __init__(self, f, domain=None, constraints=None, cost_withGradients=None, X=None, Y=None, subspace_dim_size=0,
                  model_type='GP', initial_design_numdata=1, initial_design_type='random', acquisition_type='LCB',
                  normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_inteval=1,
-                 evaluator_type='sequential', batch_size=1, num_cores=1, verbosiy=False, verbosity_model=False,
-                 maximize=False, de_duplication=False):
+                 evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False):
 
         # private field
-        self._arguments_mng = ArgumentsManager(kwargs=None)
+        self._arguments_mng = ArgumentsManager(kwargs=dict())
 
         self.subspace_dim_size = subspace_dim_size
         self.initial_design_numdata = initial_design_numdata
         self.initial_design_type = initial_design_type
         self.model_type = model_type
         self.acquisition_type = acquisition_type
+        self.evaluator_type = evaluator_type
+        self.model_update_interval = model_update_inteval
+        self.maximize = maximize
+        self.normalize_Y = normalize_Y
+        self.de_duplication = de_duplication
+        self.subspace_dim_size = subspace_dim_size
 
-        self.acquisition_type = 'LCB'
-        self.evaluator_type = 'sequential'
-        self.model_update_interval = 1
-        self.batch_size = 1
-        self.maximize = False
-        self.normalize_Y = True
-        self.num_cores = 1
+        # --- property injected in other methods.
         self.verbosity = False
-        self.de_duplication = False
-        self.constraints = None
-        self.objective_name = 'no name'
+        self.subspace_idx = None
+        self.subspace = None
+        self.max_time = None
+        self.max_iter = None
+        self.cum_time = None
+        self.report_file = None
+        self.evaluations_file = None
+        self.models_file = None
+        self.eps = None
+        self.save_models_parameters = None
+        # --- unnecessary property
+        self.suggested_sample = None
+        self.Y_new = None
 
-        self.acquisition = None
+        # --- BO class property in uncertain use
+        self.num_cores = 1
 
-        self.f = self._sign(f)
-        self.objective = SingleObjective(self.f, self.batch_size, 'objective function')
+        self.objective = SingleObjective(self._sign(f), batch_size, 'objective function')
         self.cost = CostModel(cost_withGradients=cost_withGradients)
-
         self.space = initialize_space(domain=domain, constraints=constraints)
 
-        self.set_model(exact_feval=exact_feval)
-        self.set_acquisition(acquisition_type=acquisition_type, acquisition_optimizer_type=acquisition_optimizer_type)
-        self.set_evaluator(acquisition=self.acquisition)
+        if self.model_type == 'input_warped_GP':
+            raise NotImplementedError('input_warped_GP model is not implemented')
+
+        self.model = self._arguments_mng.model_creator(
+            model_type=self.model_type, exact_feval=exact_feval, space=self.space)
+
+        self.acquisition = self._arguments_mng.acquisition_creator(
+            acquisition_type=self.acquisition_type, model=self.model, space=self.space,
+            acquisition_optimizer=AcquisitionOptimizer(space=self.space, optimizer=acquisition_optimizer_type),
+            cost_withGradients=self.cost_withGradients
+        )
+
+        self.evaluator = self._arguments_mng.evaluator_creator(
+            evaluator_type=self.evaluator_type, acquisition=self.acquisition,
+            batch_size=self.batch_size, model_type=self.model_type, model=self.model,
+            space=self.space, acquisition_optimizer=self.acquisition_optimizer
+        )
 
         self.X = X
         self.Y = Y
-        self.set_initial_values()
+        self._set_initial_values()
 
         super().__init__(
             model=self.model,
@@ -97,6 +116,14 @@ class Dropout(BO):
             model_update_interval=self.model_update_interval,
             de_duplication=self.de_duplication
         )
+
+    @property
+    def constraints(self):
+        return self.space.constraints
+
+    @property
+    def f(self):
+        return self.objective.func
 
     @property
     def cost_withGradients(self):
@@ -114,31 +141,13 @@ class Dropout(BO):
     def acquisition_optimizer(self):
         return self.acquisition.optimizer
 
-    def set_model(self, exact_feval):
-        if self.model_type == 'input_warped_GP':
-            raise NotImplementedError('input_warped_GP model is not implemented')
+    @property
+    def batch_size(self):
+        return self.objective.n_procs
 
-        self.model = self._arguments_mng.model_creator(
-            model_type=self.model_type, exact_feval=exact_feval, space=self.space)
-
-    def set_acquisition(self, acquisition_type, acquisition_optimizer_type):
-        self.acquisition = self._arguments_mng.acquisition_creator(
-            acquisition_type=acquisition_type, model=self.model, space=self.space,
-            acquisition_optimizer=AcquisitionOptimizer(space=self.space, optimizer=acquisition_optimizer_type),
-            cost_withGradients=self.cost_withGradients
-        )
-
-    def set_evaluator(self, acquisition):
-        self.evaluator = Sequential(acquisition)
-
-    def set_initial_values(self):
-        # Case 1:
-        if self.X is None:
-            self.X = initial_design(self.initial_design_type, self.space, self.initial_design_numdata)
-            self.Y, _ = self.objective.evaluate(self.X)
-        # Case 2
-        elif self.X is not None and self.Y is None:
-            self.Y, _ = self.objective.evaluate(self.X)
+    @property
+    def objective_name(self):
+        return self.objective.objective_name
 
     def run_optimization(self, max_iter=0, max_time=np.inf,  eps=1e-8, context=None,
                          verbosity=False, save_models_parameters=True, report_file=None,
@@ -156,7 +165,7 @@ class Dropout(BO):
         self.context = context
 
         # --- Check if we can save the model parameters in each iteration
-        if self.save_models_parameters == True:
+        if self.save_models_parameters:
             if not (isinstance(self.model, GPModel)):
                 print('Models printout after each iteration is only available for GP and GP_MCMC models')
                 self.save_models_parameters = False
@@ -177,13 +186,12 @@ class Dropout(BO):
                 self.max_time = max_time
 
         # --- Initialize iterations and running time
-        self.time_zero = time.time()
-        self.cum_time = 0
+        stopwatch = StopWatch()
         self.num_acquisitions = 0
         self.suggested_sample = self.X
         self.Y_new = self.Y
 
-        while (self.max_time > self.cum_time):
+        while self.max_time > stopwatch.passed_time():
             # --- update model
             try:
                 self._update_model(self.normalization_type)
@@ -205,12 +213,11 @@ class Dropout(BO):
             self.evaluate_objective()
 
             # --- Update current evaluation time and function evaluations
-            self.cum_time = time.time() - self.time_zero
             self.num_acquisitions += 1
 
             if verbosity:
                 print("num acquisition: {}, time elapsed: {:.2f}s".format(
-                    self.num_acquisitions, self.cum_time))
+                    self.num_acquisitions, stopwatch.passed_time()))
 
                 # --- Stop messages and execution time
                 self._compute_results()
@@ -223,6 +230,8 @@ class Dropout(BO):
                 if self.models_file is not None:
                     self.save_models(self.models_file)
 
+        self.cum_time = stopwatch.passed_time()
+
         # --- Stop messages and execution time
         self._compute_results()
 
@@ -233,6 +242,22 @@ class Dropout(BO):
             self.save_evaluations(self.evaluations_file)
         if self.models_file is not None:
             self.save_models(self.models_file)
+
+    def _sign(self, f):
+        if self.maximize:
+            f_copy = f
+
+            def f(x): return -f_copy(x)
+        return f
+
+    def _set_initial_values(self):
+        # Case 1:
+        if self.X is None:
+            self.X = initial_design(self.initial_design_type, self.space, self.initial_design_numdata)
+            self.Y, _ = self.objective.evaluate(self.X)
+        # Case 2
+        elif self.X is not None and self.Y is None:
+            self.Y, _ = self.objective.evaluate(self.X)
 
     def _fill_in_dimensions(self, samples):
         full_num = self.space.objective_dimensionality
@@ -258,17 +283,20 @@ class Dropout(BO):
         return np.array(samples_)
 
     def _update_acquisition(self):
-        self.set_acquisition_optimizer(space=self.subspace)
-        self.set_acquisition(space=self.subspace)
+        self.acquisition = self._arguments_mng.acquisition_creator(
+            acquisition_type=self.acquisition_type, model=self.model, space=self.subspace,
+            acquisition_optimizer=AcquisitionOptimizer(space=self.subspace, optimizer=self.acquisition_optimizer_type),
+            cost_withGradients=self.cost_withGradients
+        )
 
     def _update_evaluator(self):
         self.evaluator.acquisition = self.acquisition
 
     def _compute_next_evaluations(self, pending_zipped_X=None, ignored_zipped_X=None):
-        ## --- Update the context if any
+        # --- Update the context if any
         self.acquisition.optimizer.context_manager = ContextManager(self.subspace, self.context)
 
-        ### --- Activate de_duplication
+        # --- Activate de_duplication
         if self.de_duplication:
             duplicate_manager = DuplicateManager(
                 space=self.subspace, zipped_X=self.X, pending_zipped_X=pending_zipped_X,
@@ -276,7 +304,7 @@ class Dropout(BO):
         else:
             duplicate_manager = None
 
-        ### We zip the value in case there are categorical variables
+        # We zip the value in case there are categorical variables
         suggested_ = self.subspace.zip_inputs(self.evaluator.compute_batch(
             duplicate_manager=duplicate_manager,
             context_manager=self.acquisition.optimizer.context_manager))
@@ -287,6 +315,9 @@ class Dropout(BO):
         if self.num_acquisitions % self.model_update_interval == 0:
 
             self._update_subspace()
+
+            self.model = self._arguments_mng.model_creator(
+                model_type=self.model_type, exact_feval=self.exact_feval, space=self.subspace)
 
             # input that goes into the model (is unziped in case there are categorical variables)
             X_inmodel = self.subspace.unzip_inputs(np.array([xi[[self.subspace_idx]] for xi in self.X]))
@@ -307,10 +338,3 @@ class Dropout(BO):
             range(self.space.objective_dimensionality),
             self.subspace_dim_size, replace=False))
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
-
-    def _sign(self, f):
-        if self.maximize:
-            f_copy = f
-
-            def f(x): return -f_copy(x)
-        return f
