@@ -35,7 +35,7 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (-3, 3), 'dimensionalit
           {'name': 'x30', 'type': 'continuous', 'domain': (-3, 3), 'dimensionality': 1},
           ]
 
-method = Dropout(f=example, domain=domain, subspace_dim_size=29)
+method = Dropout(f=example, domain=domain, subspace_dim_size=3)
 
 method.run_optimization(max_iter=30)
-method.save_report(report_file='results/report_' + now_str())
+method.save_report(report_file='storage/report_' + now_str())
