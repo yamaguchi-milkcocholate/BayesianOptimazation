@@ -9,6 +9,7 @@ from GPyOpt.acquisitions.LCB import AcquisitionLCB
 from GPyOpt.experiment_design import initial_design
 from GPyOpt.util.general import normalize
 from GPyOpt.util.duplicate_manager import DuplicateManager
+from GPyOpt.util.arguments_manager import ArgumentsManager
 from bayopt.space.space import initialize_space
 from bayopt.space.space import get_subspace
 from copy import deepcopy
@@ -18,26 +19,45 @@ import time
 
 class Dropout(BO):
     """
-    Attributes
+
+    Args:
+        f (function): function to optimize.
+        domain (list | None): the description of the inputs variables
+            (See GpyOpt.core.space.Design_space class for details)
+        constraints (list | None): the description of the problem constraints
+            (See GpyOpt.core.space.Design_space class for details)
+
+
+    Attributes:
+        initial_design_numdata (int):
+        initial_design_type (string):
+
         domain (dict | None):
         constraints (dict | None):
         space (Design_space):
         model (BOModel):
         acquisition_optimizer (AcquisitionOptimizer):
         acquisition (AcquisitionBase):
-
+        cost (CostModel):
     """
 
-    def __init__(self, f, domain=None, constraints=None, X=None, Y=None, subspace_dim_size=0):
+    def __init__(self, f, domain=None, constraints=None, cost_withGradients=None, X=None, Y=None, subspace_dim_size=0,
+                 model_type='GP', initial_design_numdata=1, initial_design_type='random', acquisition_type='LCB',
+                 normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_inteval=1,
+                 evaluator_type='sequential', batch_size=1, num_cores=1, verbosiy=False, verbosity_model=False,
+                 maximize=False, de_duplication=False):
+
+        # private field
+        self._arguments_mng = ArgumentsManager(kwargs=None)
 
         self.subspace_dim_size = subspace_dim_size
-        self.initial_design_numdata = 1
-        self.initial_design_type = 'random'
-        self.model_type = 'GP'
+        self.initial_design_numdata = initial_design_numdata
+        self.initial_design_type = initial_design_type
+        self.model_type = model_type
+        self.acquisition_type = acquisition_type
+
         self.acquisition_type = 'LCB'
-        self.acquisition_optimizer_type = 'lbfgs'
         self.evaluator_type = 'sequential'
-        self.cost_withGradients = None
         self.model_update_interval = 1
         self.batch_size = 1
         self.maximize = False
@@ -45,23 +65,19 @@ class Dropout(BO):
         self.num_cores = 1
         self.verbosity = False
         self.de_duplication = False
-        self.exact_feval = False
         self.constraints = None
         self.objective_name = 'no name'
 
-        self.acquisition_optimizer = None
         self.acquisition = None
 
         self.f = self._sign(f)
         self.objective = SingleObjective(self.f, self.batch_size, 'objective function')
-        self.cost = CostModel(cost_withGradients=self.cost_withGradients)
+        self.cost = CostModel(cost_withGradients=cost_withGradients)
 
         self.space = initialize_space(domain=domain, constraints=constraints)
 
-        self.set_model()
-        # Todo: space=None
-        self.set_acquisition_optimizer(space=self.space)
-        self.set_acquisition(space=self.space)
+        self.set_model(exact_feval=exact_feval)
+        self.set_acquisition(acquisition_type=acquisition_type, acquisition_optimizer_type=acquisition_optimizer_type)
         self.set_evaluator(acquisition=self.acquisition)
 
         self.X = X
@@ -82,20 +98,35 @@ class Dropout(BO):
             de_duplication=self.de_duplication
         )
 
-    def set_model(self):
-        self.model = GPModel(
-            kernel=None, noise_var=None, exact_feval=self.exact_feval,
-            optimizer='lbfgs', max_iters=1000, optimize_restarts=5,
-            sparse=False, num_inducing=10, verbose=False, ARD=False
+    @property
+    def cost_withGradients(self):
+        return self.cost.cost_withGradients
+
+    @property
+    def exact_feval(self):
+        return self.model.exact_feval
+
+    @property
+    def acquisition_optimizer_type(self):
+        return self.acquisition_optimizer.optimizer_name
+
+    @property
+    def acquisition_optimizer(self):
+        return self.acquisition.optimizer
+
+    def set_model(self, exact_feval):
+        if self.model_type == 'input_warped_GP':
+            raise NotImplementedError('input_warped_GP model is not implemented')
+
+        self.model = self._arguments_mng.model_creator(
+            model_type=self.model_type, exact_feval=exact_feval, space=self.space)
+
+    def set_acquisition(self, acquisition_type, acquisition_optimizer_type):
+        self.acquisition = self._arguments_mng.acquisition_creator(
+            acquisition_type=acquisition_type, model=self.model, space=self.space,
+            acquisition_optimizer=AcquisitionOptimizer(space=self.space, optimizer=acquisition_optimizer_type),
+            cost_withGradients=self.cost_withGradients
         )
-
-    def set_acquisition_optimizer(self, space):
-        self.acquisition_optimizer = AcquisitionOptimizer(space=space, optimizer='lbfgs')
-
-    def set_acquisition(self, space):
-        self.acquisition = AcquisitionLCB(
-            model=self.model, space=space, optimizer=self.acquisition_optimizer,
-            cost_withGradients=None, exploration_weight=2)
 
     def set_evaluator(self, acquisition):
         self.evaluator = Sequential(acquisition)
