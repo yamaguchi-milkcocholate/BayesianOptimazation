@@ -38,21 +38,29 @@ class Dropout(BO):
         cost (CostModel):
     """
 
-    def __init__(self, f, domain=None, constraints=None, cost_withGradients=None, X=None, Y=None, subspace_dim_size=0,
+    def __init__(self, fill_in_strategy, f, mix=0.5, domain=None, constraints=None, cost_withGradients=None, X=None, Y=None, subspace_dim_size=0,
                  model_type='GP', initial_design_numdata=1, initial_design_type='random', acquisition_type='LCB',
-                 normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_inteval=1,
+                 normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_interval=1,
                  evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False):
+
+        if self.model_type == 'input_warped_GP':
+            raise NotImplementedError('input_warped_GP model is not implemented')
+
+        if fill_in_strategy not in ['random', 'copy', 'mix']:
+            raise ValueError('fill_in_strategy has to be random, copy or mix')
 
         # private field
         self._arguments_mng = ArgumentsManager(kwargs=dict())
 
+        self.fill_in_strategy = fill_in_strategy
+        self.mix = mix
         self.subspace_dim_size = subspace_dim_size
         self.initial_design_numdata = initial_design_numdata
         self.initial_design_type = initial_design_type
         self.model_type = model_type
         self.acquisition_type = acquisition_type
         self.evaluator_type = evaluator_type
-        self.model_update_interval = model_update_inteval
+        self.model_update_interval = model_update_interval
         self.maximize = maximize
         self.normalize_Y = normalize_Y
         self.de_duplication = de_duplication
@@ -80,9 +88,6 @@ class Dropout(BO):
         self.objective = SingleObjective(self._sign(f), batch_size, 'objective function')
         self.cost = CostModel(cost_withGradients=cost_withGradients)
         self.space = initialize_space(domain=domain, constraints=constraints)
-
-        if self.model_type == 'input_warped_GP':
-            raise NotImplementedError('input_warped_GP model is not implemented')
 
         self.model = self._arguments_mng.model_creator(
             model_type=self.model_type, exact_feval=exact_feval, space=self.space)
@@ -152,6 +157,7 @@ class Dropout(BO):
     def run_optimization(self, max_iter=0, max_time=np.inf,  eps=1e-8, context=None,
                          verbosity=False, save_models_parameters=True, report_file=None,
                          evaluations_file=None, models_file=None):
+
         if self.objective is None:
             raise ValueError("Cannot run the optimization loop without the objective function")
 
@@ -243,6 +249,9 @@ class Dropout(BO):
         if self.models_file is not None:
             self.save_models(self.models_file)
 
+    def get_best_point(self):
+        return self.x_opt, self.fx_opt
+
     def _sign(self, f):
         if self.maximize:
             f_copy = f
@@ -259,6 +268,27 @@ class Dropout(BO):
         elif self.X is not None and self.Y is None:
             self.Y, _ = self.objective.evaluate(self.X)
 
+    def dropout_random(self, embedded_idx):
+        return initial_design('random', get_subspace(space=self.space, subspace_idx=embedded_idx), 1)[0]
+
+    def dropout_copy(self, embedded_idx):
+        x_opt, _ = self.get_best_point()
+        return x_opt[embedded_idx]
+
+    def dropout_mix(self, embedded_idx):
+        if np.random.rand() < self.mix:
+            return self.dropout_random(embedded_idx=embedded_idx)
+        else:
+            return self.dropout_copy(embedded_idx=embedded_idx)
+
+    def _fill_in_strategy(self, embedded_idx):
+        if self.fill_in_strategy == 'random':
+            return self.dropout_random(embedded_idx=embedded_idx)
+        elif self.fill_in_strategy == 'copy':
+            return self.dropout_copy(embedded_idx=embedded_idx)
+        elif self.fill_in_strategy == 'mix':
+            return self.dropout_mix(embedded_idx=embedded_idx)
+
     def _fill_in_dimensions(self, samples):
         full_num = self.space.objective_dimensionality
         subspace_idx = self.subspace_idx
@@ -271,8 +301,7 @@ class Dropout(BO):
             if len(sample) > len(subspace_idx):
                 raise ValueError('samples already have been full-dimensionality')
 
-            # Todo: other besides random
-            embedded_sample = initial_design('random', get_subspace(space=self.space, subspace_idx=embedded_idx), 1)[0]
+            embedded_sample = self._fill_in_strategy(embedded_idx=embedded_idx)
 
             sample_ = deepcopy(sample)
             for emb_idx, insert_idx in enumerate(embedded_idx):
