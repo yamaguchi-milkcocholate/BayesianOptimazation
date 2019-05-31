@@ -17,7 +17,7 @@ class TestDropout(unittest.TestCase):
                   {'name': 'x4', 'type': 'continuous', 'domain': (-3, 3), 'dimensionality': 1},
                   ]
         self.method = Dropout(
-            f=f, domain=bounds, subspace_dim_size=3
+            f=f, domain=bounds, subspace_dim_size=3, fill_in_strategy='random'
         )
 
     def test_example(self):
@@ -30,10 +30,6 @@ class TestDropout(unittest.TestCase):
         self.assertEqual(domain[2]['name'], '2')
         self.assertEqual(domain[3]['name'], '3')
         self.assertEqual(domain[4]['name'], '4')
-
-    def test_subspace(self):
-        space = self.method.space
-        self.assertTrue(True)
 
 
 if __name__ == '__main__':

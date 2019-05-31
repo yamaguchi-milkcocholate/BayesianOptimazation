@@ -43,7 +43,7 @@ class Dropout(BO):
                  normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_interval=1,
                  evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False):
 
-        if self.model_type == 'input_warped_GP':
+        if model_type == 'input_warped_GP':
             raise NotImplementedError('input_warped_GP model is not implemented')
 
         if fill_in_strategy not in ['random', 'copy', 'mix']:
