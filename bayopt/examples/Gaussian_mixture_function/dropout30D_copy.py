@@ -36,7 +36,7 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           ]
 
 dim = len(domain)
-fill_in_strategy = 'random'
+fill_in_strategy = 'copy'
 f = GaussianMixtureFunction(dim=dim)
 method = Dropout(f=f, domain=domain, subspace_dim_size=5, fill_in_strategy=fill_in_strategy, maximize=True)
-method.run_optimization(max_iter=500)
+method.run_optimization(max_iter=10)

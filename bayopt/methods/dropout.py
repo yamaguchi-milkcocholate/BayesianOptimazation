@@ -11,8 +11,11 @@ from GPyOpt.util.arguments_manager import ArgumentsManager
 from bayopt.space.space import initialize_space
 from bayopt.space.space import get_subspace
 from bayopt.clock.stopwatch import StopWatch
+from bayopt.clock.clock import now_str
+from bayopt import definitions
 from copy import deepcopy
 import numpy as np
+import os
 
 
 class Dropout(BO):
@@ -197,6 +200,7 @@ class Dropout(BO):
         self.num_acquisitions = 0
         self.suggested_sample = self.X
         self.Y_new = self.Y
+        self._compute_results()
 
         while self.max_time > stopwatch.passed_time():
             # --- update model
@@ -249,6 +253,8 @@ class Dropout(BO):
             self.save_evaluations(self.evaluations_file)
         if self.models_file is not None:
             self.save_models(self.models_file)
+
+        self._save()
 
     def get_best_point(self):
         return self.x_opt, self.fx_opt
@@ -368,3 +374,11 @@ class Dropout(BO):
             range(self.space.objective_dimensionality),
             self.subspace_dim_size, replace=False))
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
+
+    def _save(self):
+        dir_name = definitions.ROOT_DIR + '/storage/' + now_str()
+        os.mkdir(dir_name)
+
+        self.save_report(report_file=dir_name + '/report.txt')
+        self.save_evaluations(evaluations_file=dir_name + '/evaluation.csv')
+        self.save_models(models_file=dir_name + '/model.csv')
