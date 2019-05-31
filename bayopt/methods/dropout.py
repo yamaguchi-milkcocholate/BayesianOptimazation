@@ -203,6 +203,8 @@ class Dropout(BO):
         self._compute_results()
 
         while self.max_time > stopwatch.passed_time():
+            print('.')
+
             # --- update model
             try:
                 self._update_model(self.normalization_type)
@@ -259,6 +261,19 @@ class Dropout(BO):
     def get_best_point(self):
         return self.x_opt, self.fx_opt
 
+    def _dropout_random(self, embedded_idx):
+        return initial_design('random', get_subspace(space=self.space, subspace_idx=embedded_idx), 1)[0]
+
+    def _dropout_copy(self, embedded_idx):
+        x_opt, _ = self.get_best_point()
+        return x_opt[embedded_idx]
+
+    def _dropout_mix(self, embedded_idx):
+        if np.random.rand() < self.mix:
+            return self._dropout_random(embedded_idx=embedded_idx)
+        else:
+            return self._dropout_copy(embedded_idx=embedded_idx)
+
     def _sign(self, f):
         if self.maximize:
             f_copy = f
@@ -275,26 +290,13 @@ class Dropout(BO):
         elif self.X is not None and self.Y is None:
             self.Y, _ = self.objective.evaluate(self.X)
 
-    def dropout_random(self, embedded_idx):
-        return initial_design('random', get_subspace(space=self.space, subspace_idx=embedded_idx), 1)[0]
-
-    def dropout_copy(self, embedded_idx):
-        x_opt, _ = self.get_best_point()
-        return x_opt[embedded_idx]
-
-    def dropout_mix(self, embedded_idx):
-        if np.random.rand() < self.mix:
-            return self.dropout_random(embedded_idx=embedded_idx)
-        else:
-            return self.dropout_copy(embedded_idx=embedded_idx)
-
     def _fill_in_strategy(self, embedded_idx):
         if self.fill_in_strategy == 'random':
-            return self.dropout_random(embedded_idx=embedded_idx)
+            return self._dropout_random(embedded_idx=embedded_idx)
         elif self.fill_in_strategy == 'copy':
-            return self.dropout_copy(embedded_idx=embedded_idx)
+            return self._dropout_copy(embedded_idx=embedded_idx)
         elif self.fill_in_strategy == 'mix':
-            return self.dropout_mix(embedded_idx=embedded_idx)
+            return self._dropout_mix(embedded_idx=embedded_idx)
 
     def _fill_in_dimensions(self, samples):
         full_num = self.space.objective_dimensionality
@@ -382,3 +384,60 @@ class Dropout(BO):
         self.save_report(report_file=dir_name + '/report.txt')
         self.save_evaluations(evaluations_file=dir_name + '/evaluation.csv')
         self.save_models(models_file=dir_name + '/model.csv')
+
+    def save_report(self, report_file= None):
+        with open(report_file,'w') as file:
+            import GPyOpt
+            import time
+
+            file.write('-----------------------------' + ' GPyOpt Report file ' + '-----------------------------------\n')
+            file.write('GPyOpt Version ' + str(GPyOpt.__version__) + '\n')
+            file.write('Date and time:               ' + time.strftime("%c")+'\n')
+            if self.num_acquisitions==self.max_iter:
+                file.write('Optimization completed:      ' +'YES, ' + str(self.X.shape[0]).strip('[]') + ' samples collected.\n')
+                file.write('Number initial samples:      ' + str(self.initial_design_numdata) +' \n')
+            else:
+                file.write('Optimization completed:      ' +'NO,' + str(self.X.shape[0]).strip('[]') + ' samples collected.\n')
+                file.write('Number initial samples:      ' + str(self.initial_design_numdata) +' \n')
+
+            file.write('Tolerance:                   ' + str(self.eps) + '.\n')
+            file.write('Optimization time:           ' + str(self.cum_time).strip('[]') +' seconds.\n')
+
+            file.write('\n')
+            file.write('--------------------------------' + ' Problem set up ' + '------------------------------------\n')
+            file.write('Problem name:                ' + self.objective_name +'\n')
+            file.write('Problem dimension:           ' + str(self.space.dimensionality) +'\n')
+            file.write('Number continuous variables  ' + str(len(self.space.get_continuous_dims()) ) +'\n')
+            file.write('Number discrete variables    ' + str(len(self.space.get_discrete_dims())) +'\n')
+            file.write('Number bandits               ' + str(self.space.get_bandit().shape[0]) +'\n')
+            file.write('Noiseless evaluations:       ' + str(self.exact_feval) +'\n')
+            file.write('Cost used:                   ' + self.cost.cost_type +'\n')
+            file.write('Constraints:                  ' + str(self.constraints==True) +'\n')
+
+            file.write('\n')
+            file.write('------------------------------' + ' Optimization set up ' + '---------------------------------\n')
+            file.write('Normalized outputs:          ' + str(self.normalize_Y) + '\n')
+            file.write('Model type:                  ' + str(self.model_type).strip('[]') + '\n')
+            file.write('Model update interval:       ' + str(self.model_update_interval) + '\n')
+            file.write('Acquisition type:            ' + str(self.acquisition_type).strip('[]') + '\n')
+            file.write('Acquisition optimizer:       ' + str(self.acquisition_optimizer.optimizer_name).strip('[]') + '\n')
+
+            file.write('Acquisition type:            ' + str(self.acquisition_type).strip('[]') + '\n')
+            if hasattr(self, 'acquisition_optimizer') and hasattr(self.acquisition_optimizer, 'optimizer_name'):
+                file.write('Acquisition optimizer:       ' + str(self.acquisition_optimizer.optimizer_name).strip('[]') + '\n')
+            else:
+                file.write('Acquisition optimizer:       None\n')
+            file.write('Evaluator type (batch size): ' + str(self.evaluator_type).strip('[]') + ' (' + str(self.batch_size) + ')' + '\n')
+            file.write('Cores used:                  ' + str(self.num_cores) + '\n')
+
+            file.write('\n')
+            file.write('---------------------------------' + ' Summary ' + '------------------------------------------\n')
+            if self.maximize:
+                file.write('Value at maximum:            ' + str(format(-min(self.Y)[0], '.20f')).strip('[]') +'\n')
+                file.write('Best found maximum location: ' + str(self.X[np.argmin(self.Y),:]).strip('[]') +'\n')
+            else:
+                file.write('Value at minimum:            ' + str(format(min(self.Y)[0], '.20f')).strip('[]') +'\n')
+                file.write('Best found minimum location: ' + str(self.X[np.argmin(self.Y),:]).strip('[]') +'\n')
+
+            file.write('----------------------------------------------------------------------------------------------\n')
+            file.close()

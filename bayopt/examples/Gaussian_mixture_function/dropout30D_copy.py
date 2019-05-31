@@ -1,7 +1,5 @@
 from bayopt.methods.dropout import Dropout
-from bayopt.clock.clock import now_str
 from bayopt.objective_examples.experiments import GaussianMixtureFunction
-import os
 
 domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x1', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
@@ -39,4 +37,4 @@ dim = len(domain)
 fill_in_strategy = 'copy'
 f = GaussianMixtureFunction(dim=dim)
 method = Dropout(f=f, domain=domain, subspace_dim_size=5, fill_in_strategy=fill_in_strategy, maximize=True)
-method.run_optimization(max_iter=10)
+method.run_optimization(max_iter=500)
