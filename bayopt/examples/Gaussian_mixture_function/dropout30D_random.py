@@ -32,12 +32,10 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           {'name': 'x27', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x28', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x29', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x30', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           ]
 
 dim = len(domain)
 f = GaussianMixtureFunction(dim=dim)
-method = Dropout(f=f, domain=domain, subspace_dim_size=3, fill_in_strategy='random')
-
-method.run_optimization(max_iter=30)
+method = Dropout(f=f, domain=domain, subspace_dim_size=5, fill_in_strategy='random', maximize=True)
+method.run_optimization(max_iter=500)
 method.save_report(report_file='storage/report_' + now_str())
