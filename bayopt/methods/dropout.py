@@ -55,6 +55,7 @@ class Dropout(BO):
         self.fill_in_strategy = fill_in_strategy
         self.mix = mix
         self.subspace_dim_size = subspace_dim_size
+        self.cost_withGradients = cost_withGradients
         self.initial_design_numdata = initial_design_numdata
         self.initial_design_type = initial_design_type
         self.model_type = model_type
@@ -131,7 +132,7 @@ class Dropout(BO):
         return self.objective.func
 
     @property
-    def cost_withGradients(self):
+    def cost_type(self):
         return self.cost.cost_withGradients
 
     @property
