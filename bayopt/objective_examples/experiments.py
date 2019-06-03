@@ -7,7 +7,26 @@ def example(x):
     return -0.1 * (x0 ** 2 + x1 ** 2 - 16) ** 2 + 10 * np.sin(3 * x0)
 
 
-class GaussianMixtureFunction:
+class ExperimentFunction(object):
+
+    function_name = 'Base Class'
+
+    def get_function_name(self):
+        return self.function_name
+
+
+class SchwefelsFunction(ExperimentFunction):
+
+    function_name = "Schwefel's 1.2 function"
+
+    def __call__(self, x):
+        return np.sum([(np.sum([x[dj] for dj in range(di + 1)]) ** 2) for di in range(len(x))])
+
+    def get_function_name(self):
+        return self.function_name
+
+
+class GaussianMixtureFunction(ExperimentFunction):
 
     function_name = 'Gaussian mixture function'
 
@@ -21,4 +40,4 @@ class GaussianMixtureFunction:
         return (self.np_1.pdf(x) + 0.5 * self.np_2.pdf(x)) / self.max_value
 
     def get_function_name(self):
-        return self.function_name
+        return super()
