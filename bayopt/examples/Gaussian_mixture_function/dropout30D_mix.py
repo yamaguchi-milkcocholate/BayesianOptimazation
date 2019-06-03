@@ -39,6 +39,5 @@ dim = len(domain)
 fill_in_strategy = 'mix'
 f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
 X = np.array([np.full(dim, 1)])
-method = Dropout(f=f, domain=domain, subspace_dim_size=5, fill_in_strategy=fill_in_strategy, maximize=True, mix=0.5,
-                 X=X)
-method.run_optimization(max_iter=500)
+method = Dropout(f=f, domain=domain, subspace_dim_size=5, fill_in_strategy=fill_in_strategy, maximize=True, mix=0.5)
+method.run_optimization(max_iter=200)

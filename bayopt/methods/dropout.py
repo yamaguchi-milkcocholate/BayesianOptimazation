@@ -395,7 +395,7 @@ class Dropout(BO):
         self.save_evaluations(evaluations_file=dir_name + '/evaluation.csv')
         self.save_models(models_file=dir_name + '/model.csv')
 
-    def save_report(self, report_file= None):
+    def save_report(self, report_file=None):
         with open(report_file,'w') as file:
             import GPyOpt
             import time
