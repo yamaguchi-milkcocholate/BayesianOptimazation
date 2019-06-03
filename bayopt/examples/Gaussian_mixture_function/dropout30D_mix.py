@@ -1,5 +1,6 @@
 from bayopt.methods.dropout import Dropout
 from bayopt.objective_examples.experiments import GaussianMixtureFunction
+import numpy as np
 
 domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x1', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
@@ -37,5 +38,7 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
 dim = len(domain)
 fill_in_strategy = 'mix'
 f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-method = Dropout(f=f, domain=domain, subspace_dim_size=5, fill_in_strategy=fill_in_strategy, maximize=True, mix=0.5)
+X = np.array([np.full(dim, 1)])
+method = Dropout(f=f, domain=domain, subspace_dim_size=5, fill_in_strategy=fill_in_strategy, maximize=True, mix=0.5,
+                 X=X)
 method.run_optimization(max_iter=500)
