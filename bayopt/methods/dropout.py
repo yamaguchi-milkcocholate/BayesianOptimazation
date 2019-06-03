@@ -11,8 +11,11 @@ from GPyOpt.util.arguments_manager import ArgumentsManager
 from bayopt.space.space import initialize_space
 from bayopt.space.space import get_subspace
 from bayopt.clock.stopwatch import StopWatch
+from bayopt.clock.clock import now_str
+from bayopt import definitions
 from copy import deepcopy
 import numpy as np
+import os
 
 
 class Dropout(BO):
@@ -38,21 +41,30 @@ class Dropout(BO):
         cost (CostModel):
     """
 
-    def __init__(self, f, domain=None, constraints=None, cost_withGradients=None, X=None, Y=None, subspace_dim_size=0,
+    def __init__(self, fill_in_strategy, f, mix=0.5, domain=None, constraints=None, cost_withGradients=None, X=None, Y=None, subspace_dim_size=0,
                  model_type='GP', initial_design_numdata=1, initial_design_type='random', acquisition_type='LCB',
-                 normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_inteval=1,
+                 normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_interval=1,
                  evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False):
+
+        if model_type == 'input_warped_GP':
+            raise NotImplementedError('input_warped_GP model is not implemented')
+
+        if fill_in_strategy not in ['random', 'copy', 'mix']:
+            raise ValueError('fill_in_strategy has to be random, copy or mix')
 
         # private field
         self._arguments_mng = ArgumentsManager(kwargs=dict())
 
+        self.fill_in_strategy = fill_in_strategy
+        self.mix = mix
         self.subspace_dim_size = subspace_dim_size
+        self.cost_withGradients = cost_withGradients
         self.initial_design_numdata = initial_design_numdata
         self.initial_design_type = initial_design_type
         self.model_type = model_type
         self.acquisition_type = acquisition_type
         self.evaluator_type = evaluator_type
-        self.model_update_interval = model_update_inteval
+        self.model_update_interval = model_update_interval
         self.maximize = maximize
         self.normalize_Y = normalize_Y
         self.de_duplication = de_duplication
@@ -77,12 +89,9 @@ class Dropout(BO):
         # --- BO class property in uncertain use
         self.num_cores = 1
 
-        self.objective = SingleObjective(self._sign(f), batch_size, 'objective function')
+        self.objective = SingleObjective(self._sign(f), batch_size, f.get_function_name())
         self.cost = CostModel(cost_withGradients=cost_withGradients)
         self.space = initialize_space(domain=domain, constraints=constraints)
-
-        if self.model_type == 'input_warped_GP':
-            raise NotImplementedError('input_warped_GP model is not implemented')
 
         self.model = self._arguments_mng.model_creator(
             model_type=self.model_type, exact_feval=exact_feval, space=self.space)
@@ -126,7 +135,7 @@ class Dropout(BO):
         return self.objective.func
 
     @property
-    def cost_withGradients(self):
+    def cost_type(self):
         return self.cost.cost_withGradients
 
     @property
@@ -152,6 +161,7 @@ class Dropout(BO):
     def run_optimization(self, max_iter=0, max_time=np.inf,  eps=1e-8, context=None,
                          verbosity=False, save_models_parameters=True, report_file=None,
                          evaluations_file=None, models_file=None):
+
         if self.objective is None:
             raise ValueError("Cannot run the optimization loop without the objective function")
 
@@ -190,8 +200,11 @@ class Dropout(BO):
         self.num_acquisitions = 0
         self.suggested_sample = self.X
         self.Y_new = self.Y
+        self._compute_results()
 
         while self.max_time > stopwatch.passed_time():
+            print('.')
+
             # --- update model
             try:
                 self._update_model(self.normalization_type)
@@ -243,6 +256,24 @@ class Dropout(BO):
         if self.models_file is not None:
             self.save_models(self.models_file)
 
+        self._save()
+
+    def get_best_point(self):
+        return self.x_opt, self.fx_opt
+
+    def _dropout_random(self, embedded_idx):
+        return initial_design('random', get_subspace(space=self.space, subspace_idx=embedded_idx), 1)[0]
+
+    def _dropout_copy(self, embedded_idx):
+        x_opt, _ = self.get_best_point()
+        return x_opt[embedded_idx]
+
+    def _dropout_mix(self, embedded_idx):
+        if np.random.rand() < self.mix:
+            return self._dropout_random(embedded_idx=embedded_idx)
+        else:
+            return self._dropout_copy(embedded_idx=embedded_idx)
+
     def _sign(self, f):
         if self.maximize:
             f_copy = f
@@ -251,13 +282,26 @@ class Dropout(BO):
         return f
 
     def _set_initial_values(self):
-        # Case 1:
         if self.X is None:
             self.X = initial_design(self.initial_design_type, self.space, self.initial_design_numdata)
             self.Y, _ = self.objective.evaluate(self.X)
-        # Case 2
         elif self.X is not None and self.Y is None:
             self.Y, _ = self.objective.evaluate(self.X)
+
+        # save initial values
+        self.initial_X = deepcopy(self.X)
+        if self.maximize:
+            self.initial_Y = -deepcopy(self.Y)
+        else:
+            self.initial_Y = deepcopy(self.Y)
+
+    def _fill_in_strategy(self, embedded_idx):
+        if self.fill_in_strategy == 'random':
+            return self._dropout_random(embedded_idx=embedded_idx)
+        elif self.fill_in_strategy == 'copy':
+            return self._dropout_copy(embedded_idx=embedded_idx)
+        elif self.fill_in_strategy == 'mix':
+            return self._dropout_mix(embedded_idx=embedded_idx)
 
     def _fill_in_dimensions(self, samples):
         full_num = self.space.objective_dimensionality
@@ -271,8 +315,7 @@ class Dropout(BO):
             if len(sample) > len(subspace_idx):
                 raise ValueError('samples already have been full-dimensionality')
 
-            # Todo: other besides random
-            embedded_sample = initial_design('random', get_subspace(space=self.space, subspace_idx=embedded_idx), 1)[0]
+            embedded_sample = self._fill_in_strategy(embedded_idx=embedded_idx)
 
             sample_ = deepcopy(sample)
             for emb_idx, insert_idx in enumerate(embedded_idx):
@@ -338,3 +381,78 @@ class Dropout(BO):
             range(self.space.objective_dimensionality),
             self.subspace_dim_size, replace=False))
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
+
+    def _save(self):
+        try:
+            os.mkdir(definitions.ROOT_DIR + '/storage/' + self.objective_name)
+        except FileExistsError as e:
+            pass
+        
+        dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(self.space.dimensionality) + 'D ' + str(self.fill_in_strategy)
+        os.mkdir(dir_name)
+
+        self.save_report(report_file=dir_name + '/report.txt')
+        self.save_evaluations(evaluations_file=dir_name + '/evaluation.csv')
+        self.save_models(models_file=dir_name + '/model.csv')
+
+    def save_report(self, report_file= None):
+        with open(report_file,'w') as file:
+            import GPyOpt
+            import time
+
+            file.write('-----------------------------' + ' GPyOpt Report file ' + '-----------------------------------\n')
+            file.write('GPyOpt Version ' + str(GPyOpt.__version__) + '\n')
+            file.write('Date and time:               ' + time.strftime("%c")+'\n')
+            if self.num_acquisitions==self.max_iter:
+                file.write('Optimization completed:      ' +'YES, ' + str(self.X.shape[0]).strip('[]') + ' samples collected.\n')
+                file.write('Number initial samples:      ' + str(self.initial_design_numdata) +' \n')
+            else:
+                file.write('Optimization completed:      ' +'NO,' + str(self.X.shape[0]).strip('[]') + ' samples collected.\n')
+                file.write('Number initial samples:      ' + str(self.initial_design_numdata) +' \n')
+
+            file.write('Tolerance:                   ' + str(self.eps) + '.\n')
+            file.write('Optimization time:           ' + str(self.cum_time).strip('[]') +' seconds.\n')
+
+            file.write('\n')
+            file.write('--------------------------------' + ' Problem set up ' + '------------------------------------\n')
+            file.write('Problem name:                ' + self.objective_name +'\n')
+            file.write('Problem dimension:           ' + str(self.space.dimensionality) +'\n')
+            file.write('Number continuous variables  ' + str(len(self.space.get_continuous_dims()) ) +'\n')
+            file.write('Number discrete variables    ' + str(len(self.space.get_discrete_dims())) +'\n')
+            file.write('Number bandits               ' + str(self.space.get_bandit().shape[0]) +'\n')
+            file.write('Noiseless evaluations:       ' + str(self.exact_feval) +'\n')
+            file.write('Cost used:                   ' + self.cost.cost_type +'\n')
+            file.write('Constraints:                 ' + str(self.constraints==True) +'\n')
+            file.write('Subspace Dimension:          ' + str(self.subspace_dim_size) + '\n')
+            file.write('Fill in strategy:            ' + str(self.fill_in_strategy) + '\n')
+
+            file.write('\n')
+            file.write('------------------------------' + ' Optimization set up ' + '---------------------------------\n')
+            file.write('Normalized outputs:          ' + str(self.normalize_Y) + '\n')
+            file.write('Model type:                  ' + str(self.model_type).strip('[]') + '\n')
+            file.write('Model update interval:       ' + str(self.model_update_interval) + '\n')
+            file.write('Acquisition type:            ' + str(self.acquisition_type).strip('[]') + '\n')
+            file.write('Acquisition optimizer:       ' + str(self.acquisition_optimizer.optimizer_name).strip('[]') + '\n')
+
+            file.write('Acquisition type:            ' + str(self.acquisition_type).strip('[]') + '\n')
+            if hasattr(self, 'acquisition_optimizer') and hasattr(self.acquisition_optimizer, 'optimizer_name'):
+                file.write('Acquisition optimizer:       ' + str(self.acquisition_optimizer.optimizer_name).strip('[]') + '\n')
+            else:
+                file.write('Acquisition optimizer:       None\n')
+            file.write('Evaluator type (batch size): ' + str(self.evaluator_type).strip('[]') + ' (' + str(self.batch_size) + ')' + '\n')
+            file.write('Cores used:                  ' + str(self.num_cores) + '\n')
+
+            file.write('\n')
+            file.write('---------------------------------' + ' Summary ' + '------------------------------------------\n')
+            file.write('Initial X:                       ' + str(self.initial_X) + '\n')
+            file.write('Initial Y:                       ' + str(self.initial_Y) + '\n')
+
+            if self.maximize:
+                file.write('Value at maximum:            ' + str(format(-min(self.Y)[0], '.20f')).strip('[]') +'\n')
+                file.write('Best found maximum location: ' + str(self.X[np.argmin(self.Y),:]).strip('[]') +'\n')
+            else:
+                file.write('Value at minimum:            ' + str(format(min(self.Y)[0], '.20f')).strip('[]') +'\n')
+                file.write('Best found minimum location: ' + str(self.X[np.argmin(self.Y),:]).strip('[]') +'\n')
+
+            file.write('----------------------------------------------------------------------------------------------\n')
+            file.close()
