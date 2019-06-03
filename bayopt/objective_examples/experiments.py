@@ -13,6 +13,7 @@ class GaussianMixtureFunction:
         self.dim = dim
         self.np_1 = multivariate_normal(np.full(dim, mean_1), np.diag(np.ones(dim)))
         self.np_2 = multivariate_normal(np.full(dim, mean_2), np.diag(np.ones(dim)))
+        self.max_value = self.np_1.pdf(np.full(dim, mean_1)) + 0.5 * self.np_2.pdf(np.full(dim, mean_1))
 
     def __call__(self, x):
-        return self.np_1.pdf(x) + 0.5 * self.np_2.pdf(x)
+        return (self.np_1.pdf(x) + 0.5 * self.np_2.pdf(x)) / self.max_value
