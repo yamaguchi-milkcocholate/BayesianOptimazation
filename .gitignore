@@ -9,4 +9,4 @@ bayopt/optimizer/__pycache__/
 
 *.pyc
 
-bayopt/storage/
+bayopt/storage/*
