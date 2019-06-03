@@ -1,5 +1,5 @@
 from bayopt.methods.bo import BayesianOptimizationCOMP
-from bayopt.objective_examples.experiments import gaussian_mixture_function
+from bayopt.objective_examples.experiments import GaussianMixtureFunction
 
 domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x1', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
@@ -34,6 +34,6 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           ]
 
 dim = len(domain)
-f = gaussian_mixture_function
+f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
 method = BayesianOptimizationCOMP(f=f, domain=domain, maximize=True)
 method.run_optimization(max_iter=100)
