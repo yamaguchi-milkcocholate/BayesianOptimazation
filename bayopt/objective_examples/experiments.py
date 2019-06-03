@@ -9,7 +9,7 @@ def example(x):
 
 class SchwefelsFunction:
 
-    function_name = "Schwefel's 1.2 function"
+    function_name = "Schwefel's function"
 
     def __call__(self, x):
         return np.sum([(np.sum([x[dj] for dj in range(di + 1)]) ** 2) for di in range(len(x))])
