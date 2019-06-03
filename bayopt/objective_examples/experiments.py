@@ -9,6 +9,8 @@ def example(x):
 
 class GaussianMixtureFunction:
 
+    function_name = 'Gaussian mixture function'
+
     def __init__(self, dim, mean_1, mean_2):
         self.dim = dim
         self.np_1 = multivariate_normal(np.full(dim, mean_1), np.diag(np.ones(dim)))
@@ -17,3 +19,6 @@ class GaussianMixtureFunction:
 
     def __call__(self, x):
         return (self.np_1.pdf(x) + 0.5 * self.np_2.pdf(x)) / self.max_value
+
+    def get_function_name(self):
+        return self.function_name

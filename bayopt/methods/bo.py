@@ -6,6 +6,7 @@ import GPyOpt
 import numpy as np
 import time
 import os
+from copy import deepcopy
 
 
 class BayesianOptimizationCOMP(BayesianOptimization):
@@ -24,6 +25,8 @@ class BayesianOptimizationCOMP(BayesianOptimization):
             model_update_interval=model_update_interval, evaluator_type=evaluator_type,
             batch_size=batch_size, num_cores=num_cores, verbosity=verbosity, verbosity_model=verbosity_model,
             maximize=maximize, de_duplication=de_duplication)
+
+        self.objective_name = f.get_function_name()
 
     def run_optimization(self, max_iter=0, max_time=np.inf,  eps=1e-8, context=None, verbosity=False, save_models_parameters=True, report_file=None, evaluations_file=None, models_file=None):
         if self.objective is None:
@@ -115,8 +118,23 @@ class BayesianOptimizationCOMP(BayesianOptimization):
 
         self._save()
 
+    def _init_design_chooser(self):
+        super()._init_design_chooser()
+
+        # save initial values
+        self.initial_X = deepcopy(self.X)
+        if self.maximize:
+            self.initial_Y = -deepcopy(self.Y)
+        else:
+            self.initial_Y = deepcopy(self.Y)
+
     def _save(self):
-        dir_name = definitions.ROOT_DIR + '/storage/' + now_str()
+        try:
+            os.mkdir(definitions.ROOT_DIR + '/storage/' + self.objective_name)
+        except FileExistsError as e:
+            pass
+
+        dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(self.space.dimensionality) + 'D bo'
         os.mkdir(dir_name)
 
         self.save_report(report_file=dir_name + '/report.txt')
@@ -170,6 +188,8 @@ class BayesianOptimizationCOMP(BayesianOptimization):
 
             file.write('\n')
             file.write('---------------------------------' + ' Summary ' + '------------------------------------------\n')
+            file.write('Initial X:                       ' + str(self.initial_X) + '\n')
+            file.write('Initial Y:                       ' + str(self.initial_Y) + '\n')
             if self.maximize:
                 file.write('Value at maximum:            ' + str(format(-min(self.Y)[0], '.20f')).strip('[]') +'\n')
                 file.write('Best found maximum location: ' + str(self.X[np.argmin(self.Y),:]).strip('[]') +'\n')

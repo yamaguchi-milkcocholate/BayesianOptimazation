@@ -89,7 +89,7 @@ class Dropout(BO):
         # --- BO class property in uncertain use
         self.num_cores = 1
 
-        self.objective = SingleObjective(self._sign(f), batch_size, 'objective function')
+        self.objective = SingleObjective(self._sign(f), batch_size, f.get_function_name())
         self.cost = CostModel(cost_withGradients=cost_withGradients)
         self.space = initialize_space(domain=domain, constraints=constraints)
 
@@ -282,13 +282,18 @@ class Dropout(BO):
         return f
 
     def _set_initial_values(self):
-        # Case 1:
         if self.X is None:
             self.X = initial_design(self.initial_design_type, self.space, self.initial_design_numdata)
             self.Y, _ = self.objective.evaluate(self.X)
-        # Case 2
         elif self.X is not None and self.Y is None:
             self.Y, _ = self.objective.evaluate(self.X)
+
+        # save initial values
+        self.initial_X = deepcopy(self.X)
+        if self.maximize:
+            self.initial_Y = -deepcopy(self.Y)
+        else:
+            self.initial_Y = deepcopy(self.Y)
 
     def _fill_in_strategy(self, embedded_idx):
         if self.fill_in_strategy == 'random':
@@ -378,7 +383,12 @@ class Dropout(BO):
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
 
     def _save(self):
-        dir_name = definitions.ROOT_DIR + '/storage/' + now_str()
+        try:
+            os.mkdir(definitions.ROOT_DIR + '/storage/' + self.objective_name)
+        except FileExistsError as e:
+            pass
+        
+        dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(self.space.dimensionality) + 'D ' + str(self.fill_in_strategy)
         os.mkdir(dir_name)
 
         self.save_report(report_file=dir_name + '/report.txt')
@@ -412,7 +422,9 @@ class Dropout(BO):
             file.write('Number bandits               ' + str(self.space.get_bandit().shape[0]) +'\n')
             file.write('Noiseless evaluations:       ' + str(self.exact_feval) +'\n')
             file.write('Cost used:                   ' + self.cost.cost_type +'\n')
-            file.write('Constraints:                  ' + str(self.constraints==True) +'\n')
+            file.write('Constraints:                 ' + str(self.constraints==True) +'\n')
+            file.write('Subspace Dimension:          ' + str(self.subspace_dim_size) + '\n')
+            file.write('Fill in strategy:            ' + str(self.fill_in_strategy) + '\n')
 
             file.write('\n')
             file.write('------------------------------' + ' Optimization set up ' + '---------------------------------\n')
@@ -432,6 +444,9 @@ class Dropout(BO):
 
             file.write('\n')
             file.write('---------------------------------' + ' Summary ' + '------------------------------------------\n')
+            file.write('Initial X:                       ' + str(self.initial_X) + '\n')
+            file.write('Initial Y:                       ' + str(self.initial_Y) + '\n')
+
             if self.maximize:
                 file.write('Value at maximum:            ' + str(format(-min(self.Y)[0], '.20f')).strip('[]') +'\n')
                 file.write('Best found maximum location: ' + str(self.X[np.argmin(self.Y),:]).strip('[]') +'\n')
