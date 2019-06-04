@@ -4,6 +4,12 @@ from bayopt.methods.dropout import Dropout
 from tests.utils.example_function import ExampleFunction
 from GPyOpt.models.gpmodel import *
 from GPyOpt.models.warpedgpmodel import *
+from GPyOpt.acquisitions.EI import *
+from GPyOpt.acquisitions.EI_mcmc import *
+from GPyOpt.acquisitions.MPI import *
+from GPyOpt.acquisitions.MPI_mcmc import *
+from GPyOpt.acquisitions.LCB import *
+from GPyOpt.acquisitions.LCB_mcmc import *
 
 
 class TestDropout(unittest.TestCase):
@@ -23,6 +29,44 @@ class TestDropout(unittest.TestCase):
         method = Dropout(
             f=self.f, domain=self.domain, subspace_dim_size=3, fill_in_strategy='random'
         )
+
+    def test_acquisition_type(self):
+        method = Dropout(
+            f=self.f, domain=self.domain, subspace_dim_size=3, fill_in_strategy='random',
+            acquisition_type='EI'
+        )
+        self.assertTrue(isinstance(method.acquisition, AcquisitionEI))
+
+        method = Dropout(
+            f=self.f, domain=self.domain, subspace_dim_size=3, fill_in_strategy='random',
+            acquisition_type='MPI'
+        )
+        self.assertTrue(isinstance(method.acquisition, AcquisitionMPI))
+
+        method = Dropout(
+            f=self.f, domain=self.domain, subspace_dim_size=3, fill_in_strategy='random',
+            acquisition_type='LCB'
+        )
+        self.assertTrue(isinstance(method.acquisition, AcquisitionLCB))
+
+    def test_acquisition_optimizer_type(self):
+        method = Dropout(
+            f=self.f, domain=self.domain, subspace_dim_size=3, fill_in_strategy='random',
+            acquisition_optimizer_type='lbfgs'
+        )
+        self.assertEqual(method.acquisition_optimizer_type, 'lbfgs')
+
+        method = Dropout(
+            f=self.f, domain=self.domain, subspace_dim_size=3, fill_in_strategy='random',
+            acquisition_optimizer_type='DIRECT'
+        )
+        self.assertEqual(method.acquisition_optimizer_type, 'DIRECT')
+
+        method = Dropout(
+            f=self.f, domain=self.domain, subspace_dim_size=3, fill_in_strategy='random',
+            acquisition_optimizer_type='CMA'
+        )
+        self.assertEqual(method.acquisition_optimizer_type, 'CMA')
 
     def test_model_type(self):
         method = Dropout(
@@ -49,7 +93,7 @@ class TestDropout(unittest.TestCase):
         )
         self.assertTrue(isinstance(method.model, WarpedGPModel))
 
-    def test_check_domain(self):
+    def test_domain(self):
         method = Dropout(
             f=self.f, domain=self.domain, subspace_dim_size=3, fill_in_strategy='random'
         )

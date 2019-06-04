@@ -49,6 +49,9 @@ class Dropout(BO):
         if model_type == 'input_warped_GP':
             raise NotImplementedError('input_warped_GP model is not implemented')
 
+        if acquisition_type in ['EI_MCMC', 'MPI_MCMC', 'LCB_MCMC']:
+            raise NotImplementedError('MCMC is not implemented')
+
         if fill_in_strategy not in ['random', 'copy', 'mix']:
             raise ValueError('fill_in_strategy has to be random, copy or mix')
 
