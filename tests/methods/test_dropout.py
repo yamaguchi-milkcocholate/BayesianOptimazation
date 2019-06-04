@@ -1,14 +1,13 @@
 import unittest
-from bayopt.methods.dropout import Dropout
 import numpy as np
+from bayopt.methods.dropout import Dropout
+from tests.utils.example_function import ExampleFunction
 
-"""
+
 class TestDropout(unittest.TestCase):
 
     def setUp(self) -> None:
-        def f(x):
-            x0, x1 = x[:, 0], x[:, 1]
-            return -0.1*(x0**2+x1**2-16)**2 + 10*np.sin(3*x0)
+        f = ExampleFunction()
 
         bounds = [{'name': 'x0', 'type': 'continuous', 'domain': (-3, 3), 'dimensionality': 1},
                   {'name': 'x1', 'type': 'continuous', 'domain': (-3, 3), 'dimensionality': 1},
@@ -27,7 +26,7 @@ class TestDropout(unittest.TestCase):
         self.assertEqual(domain[2]['name'], '2')
         self.assertEqual(domain[3]['name'], '3')
         self.assertEqual(domain[4]['name'], '4')
-"""
+
 
 if __name__ == '__main__':
     unittest.main()
