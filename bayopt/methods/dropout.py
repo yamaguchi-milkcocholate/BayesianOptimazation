@@ -127,6 +127,10 @@ class Dropout(BO):
         )
 
     @property
+    def domain(self):
+        return self.space.config_space
+
+    @property
     def constraints(self):
         return self.space.constraints
 
