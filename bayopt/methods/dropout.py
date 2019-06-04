@@ -52,6 +52,9 @@ class Dropout(BO):
         if acquisition_type in ['EI_MCMC', 'MPI_MCMC', 'LCB_MCMC']:
             raise NotImplementedError('MCMC is not implemented')
 
+        if batch_size is not 1 or evaluator_type is not 'sequential':
+            raise NotImplementedError('only sequential evaluation is implemented')
+
         if fill_in_strategy not in ['random', 'copy', 'mix']:
             raise ValueError('fill_in_strategy has to be random, copy or mix')
 
@@ -128,6 +131,10 @@ class Dropout(BO):
             model_update_interval=self.model_update_interval,
             de_duplication=self.de_duplication
         )
+
+    @property
+    def subspace_domain(self):
+        return self.subspace.config_space
 
     @property
     def domain(self):
@@ -214,9 +221,8 @@ class Dropout(BO):
 
             # --- update model
             try:
-                self._update_model(self.normalization_type)
-                self._update_acquisition()
-                self._update_evaluator()
+                self.update()
+
             except np.linalg.LinAlgError:
                 break
 
@@ -224,13 +230,7 @@ class Dropout(BO):
                     or (len(self.X) > 1 and self._distance_last_evaluations() <= self.eps)):
                 break
 
-            self.suggested_sample = self._compute_next_evaluations()
-
-            # --- Augment X
-            self.X = np.vstack((self.X, self.suggested_sample))
-
-            # --- Evaluate *f* in X, augment Y and update cost function (if needed)
-            self.evaluate_objective()
+            self.next_point()
 
             # --- Update current evaluation time and function evaluations
             self.num_acquisitions += 1
@@ -238,17 +238,6 @@ class Dropout(BO):
             if verbosity:
                 print("num acquisition: {}, time elapsed: {:.2f}s".format(
                     self.num_acquisitions, stopwatch.passed_time()))
-
-                # --- Stop messages and execution time
-                self._compute_results()
-
-                # --- Print the desired result in files
-                if self.report_file is not None:
-                    self.save_report(self.report_file)
-                if self.evaluations_file is not None:
-                    self.save_evaluations(self.evaluations_file)
-                if self.models_file is not None:
-                    self.save_models(self.models_file)
 
         self.cum_time = stopwatch.passed_time()
 
@@ -265,8 +254,23 @@ class Dropout(BO):
 
         self._save()
 
+    def next_point(self):
+        self.suggested_sample = self._compute_next_evaluations()
+
+        # --- Augment X
+        self.X = np.vstack((self.X, self.suggested_sample))
+
+        # --- Evaluate *f* in X, augment Y and update cost function (if needed)
+        self.evaluate_objective()
+
     def get_best_point(self):
+        self._compute_results()
         return self.x_opt, self.fx_opt
+
+    def update(self):
+        self._update_model(self.normalization_type)
+        self._update_acquisition()
+        self._update_evaluator()
 
     def _dropout_random(self, embedded_idx):
         return initial_design('random', get_subspace(space=self.space, subspace_idx=embedded_idx), 1)[0]
@@ -342,6 +346,36 @@ class Dropout(BO):
     def _update_evaluator(self):
         self.evaluator.acquisition = self.acquisition
 
+    def _update_model(self, normalization_type='stats'):
+        if self.num_acquisitions % self.model_update_interval == 0:
+
+            self.update_subspace()
+
+            self.model = self._arguments_mng.model_creator(
+                model_type=self.model_type, exact_feval=self.exact_feval, space=self.subspace)
+
+            # input that goes into the model (is unziped in case there are categorical variables)
+            X_inmodel = self.subspace.unzip_inputs(np.array([xi[self.subspace_idx] for xi in self.X]))
+
+            # Y_inmodel is the output that goes into the model
+            if self.normalize_Y:
+                Y_inmodel = normalize(self.Y, normalization_type)
+            else:
+                Y_inmodel = self.Y
+
+            self.model.updateModel(X_inmodel, Y_inmodel, None, None)
+            self.X_inmodel = X_inmodel
+            self.Y_inmodel = Y_inmodel
+
+        # Save parameters of the model
+        self._save_model_parameter_values()
+
+    def update_subspace(self):
+        self.subspace_idx = np.sort(np.random.choice(
+            range(self.space.objective_dimensionality),
+            self.subspace_dim_size, replace=False))
+        self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
+
     def _compute_next_evaluations(self, pending_zipped_X=None, ignored_zipped_X=None):
         # --- Update the context if any
         self.acquisition.optimizer.context_manager = ContextManager(self.subspace, self.context)
@@ -360,34 +394,6 @@ class Dropout(BO):
             context_manager=self.acquisition.optimizer.context_manager))
 
         return self._fill_in_dimensions(samples=suggested_)
-
-    def _update_model(self, normalization_type='stats'):
-        if self.num_acquisitions % self.model_update_interval == 0:
-
-            self._update_subspace()
-
-            self.model = self._arguments_mng.model_creator(
-                model_type=self.model_type, exact_feval=self.exact_feval, space=self.subspace)
-
-            # input that goes into the model (is unziped in case there are categorical variables)
-            X_inmodel = self.subspace.unzip_inputs(np.array([xi[[self.subspace_idx]] for xi in self.X]))
-
-            # Y_inmodel is the output that goes into the model
-            if self.normalize_Y:
-                Y_inmodel = normalize(self.Y, normalization_type)
-            else:
-                Y_inmodel = self.Y
-
-            self.model.updateModel(X_inmodel, Y_inmodel, None, None)
-
-        # Save parameters of the model
-        self._save_model_parameter_values()
-
-    def _update_subspace(self):
-        self.subspace_idx = np.sort(np.random.choice(
-            range(self.space.objective_dimensionality),
-            self.subspace_dim_size, replace=False))
-        self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
 
     def _save(self):
         try:
