@@ -33,3 +33,16 @@ class GaussianMixtureFunction:
 
     def get_function_name(self):
         return self.function_name
+
+
+class BraininFunction:
+
+    function_name = 'Brainin function'
+
+    def __call__(self, x):
+        x1 = x[0]
+        x2 = x[1]
+        return (x2 - (5.1*(x2**2)/(4*(np.pi**2))) + 5*x1/np.pi - 6)**2 + 10*(1-1/(8*np.pi))*np.cos(x1) + 10
+
+    def get_function_name(self):
+        return self.function_name
