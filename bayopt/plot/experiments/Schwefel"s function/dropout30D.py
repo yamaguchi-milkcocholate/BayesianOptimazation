@@ -14,11 +14,10 @@ for fill in ['random', 'copy', 'mix']:
         iter_check=501
     )
 
-    results = minimum_locus(results)
-
     x_axis = np.arange(0, len(results))
     plot = StaticPlot()
     for n in range(results.shape[1]):
+        y = minimum_locus(results[:, n])
         plot.add_data_set(x=x_axis, y=results[:, n])
 
     #plot.set_y(low_lim=0, high_lim=1)

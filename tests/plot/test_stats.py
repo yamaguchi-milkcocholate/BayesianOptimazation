@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from bayopt.plot.stats import maximum_locus
 from bayopt.plot.stats import minimum_locus
+from bayopt.plot.stats import with_confidential
 
 
 class TestStats(unittest.TestCase):
@@ -34,4 +35,12 @@ class TestStats(unittest.TestCase):
         with self.assertRaises(ValueError):
             results = minimum_locus(data)
 
+    def test_with_confidential(self):
+        data = np.array([[1, 3, 2], [2, 4, 3]])
 
+        results = with_confidential(data)
+
+        print(results)
+
+        self.assertEqual(results.values.shape[0], 2)
+        self.assertEqual(results.values.shape[1], 5)

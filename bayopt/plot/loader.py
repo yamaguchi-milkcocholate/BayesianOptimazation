@@ -25,7 +25,6 @@ def load_experiments(function_name, dim, feature, start=None, end=None, iter_che
         print(expt)
 
     results = np.array(results, dtype=np.float)
-    results = results.T
     return results
 
 

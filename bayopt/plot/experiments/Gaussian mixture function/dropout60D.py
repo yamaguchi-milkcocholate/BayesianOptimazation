@@ -20,7 +20,8 @@ for fill in ['random', 'copy', 'mix']:
     x_axis = np.arange(0, len(results))
     plot = StaticPlot()
     for n in range(results.shape[1]):
-        plot.add_data_set(x=x_axis, y=results[:, n])
+        y = maximum_locus(results[:, n])
+        plot.add_data_set(x=x_axis, y=y)
 
     plot.set_y(low_lim=0, high_lim=1)
     plot.finish(option='Gaussian mixture function_60D_' + fill)

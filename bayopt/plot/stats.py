@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 def maximum_locus(data):
@@ -31,3 +32,23 @@ def minimum_locus(data):
         data_.append(minimum)
 
     return np.array(data_)
+
+
+def with_confidential(data):
+    data = pd.DataFrame(data)
+
+    if np.any(data.isnull().values):
+        raise ValueError('Nan exists')
+
+    mean = data.mean()
+    std = data.std()
+
+    data['mean'] = mean
+    data['std'] = std
+
+    print(data)
+
+    if np.any(data.isnull().values):
+        raise ValueError('Nan exists after inserting mean, std')
+
+    return data
