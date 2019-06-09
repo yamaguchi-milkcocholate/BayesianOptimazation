@@ -1,5 +1,6 @@
 from bayopt.plot.loader import load_experiments
 from bayopt.plot.staticplot import StaticPlot
+from bayopt.plot.stats import maximum_locus
 import numpy as np
 
 
@@ -14,6 +15,7 @@ for fill in ['random', 'copy', 'mix']:
     )
 
     results = results * -1
+    results = maximum_locus(results)
 
     x_axis = np.arange(0, len(results))
     plot = StaticPlot()

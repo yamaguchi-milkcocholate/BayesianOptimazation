@@ -18,8 +18,8 @@ def load_experiments(function_name, dim, feature, start=None, end=None, iter_che
         if iter_check:
             if len(y) != iter_check:
                 print(expt + ': expect ' + str(iter_check) + ' given ' + str(len(y)))
-                rmdir_when_any(expt)
-                #raise ValueError('iterations is not enough')
+                # rmdir_when_any(expt)
+                raise ValueError('iterations is not enough')
 
         results.append(y)
         print(expt)
