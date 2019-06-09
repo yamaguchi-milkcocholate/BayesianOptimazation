@@ -8,7 +8,7 @@ for fill in ['random', 'copy', 'mix']:
         function_name='Gaussian mixture function',
         start=None,
         end=None,
-        dim='50D',
+        dim='60D',
         feature=fill,
         iter_check=501
     )
@@ -21,4 +21,4 @@ for fill in ['random', 'copy', 'mix']:
         plot.add_data_set(x=x_axis, y=results[:, n])
 
     plot.set_y(low_lim=0, high_lim=1)
-    plot.finish(option='50D_' + fill)
+    plot.finish(option='Gaussian mixture function_60D_' + fill)
