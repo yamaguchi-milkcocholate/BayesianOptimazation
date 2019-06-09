@@ -14,7 +14,7 @@ def load_experiments(function_name, dim, feature, start=None, end=None):
         y = csv_to_numpy(file=evaluation_file)
         results.append(y)
 
-    return np.array(results).T
+    return np.array(results, dtype=np.float).T
 
 
 def csv_to_numpy(file):

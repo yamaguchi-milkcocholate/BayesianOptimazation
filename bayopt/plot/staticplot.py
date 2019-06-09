@@ -23,4 +23,5 @@ class StaticPlot(Plot):
         self.__plt.plot(x, y)
 
     def finish(self):
-        self.__plt.savefig(definitions.ROOT_DIR + "/images/", clock.now_str())
+
+        self.__plt.savefig(definitions.ROOT_DIR + "/storage/images/" + clock.now_str())
