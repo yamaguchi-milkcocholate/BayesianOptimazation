@@ -1,20 +1,32 @@
 from bayopt import definitions
 from bayopt.clock.clock import from_str
+from bayopt.utils.utils import rmdir_when_any
 import os
 import csv
 import numpy as np
 
 
-def load_experiments(function_name, dim, feature, start=None, end=None):
+def load_experiments(function_name, dim, feature, start=None, end=None, iter_check=None):
     experiments = load_files(
         function_name=function_name, start=start, end=end, dim=dim, feature=feature)
+
     results = list()
     for expt in experiments:
         evaluation_file = expt + '/evaluation.csv'
         y = csv_to_numpy(file=evaluation_file)
-        results.append(y)
 
-    return np.array(results, dtype=np.float).T
+        if iter_check:
+            if len(y) != iter_check:
+                print(expt + ': expect ' + str(iter_check) + ' given ' + str(len(y)))
+                rmdir_when_any(expt)
+                #raise ValueError('iterations is not enough')
+
+        results.append(y)
+        print(expt)
+
+    results = np.array(results, dtype=np.float)
+    results = results.T
+    return results
 
 
 def csv_to_numpy(file):
@@ -26,7 +38,7 @@ def csv_to_numpy(file):
 
         for row in reader:
             y.append(row[1])
-    return np.array(y)
+    return np.array(y, dtype=np.float)
 
 
 def load_files(function_name, start=None, end=None, **kwargs):
@@ -46,7 +58,12 @@ def load_files(function_name, start=None, end=None, **kwargs):
     if end:
         end = from_str(end)
     for expt in experiments:
-        dt, tm, dim, feature = expt.split(' ')
+        try:
+            dt, tm, dim, feature = expt.split(' ')
+        except ValueError as e:
+            print('discard: ' + expt)
+            continue
+
         expt_time = from_str(dt + ' ' + tm)
 
         is_append = True
