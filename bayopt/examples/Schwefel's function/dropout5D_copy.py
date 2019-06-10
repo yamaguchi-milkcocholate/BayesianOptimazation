@@ -12,7 +12,7 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (-1, 1), 'dimensionalit
 dim = len(domain)
 fill_in_strategy = 'copy'
 f = SchwefelsFunction()
-X = np.array([np.full(dim, 4)])
+X = np.array([np.full(dim, 1)])
 method = Dropout(f=f, domain=domain, subspace_dim_size=2, fill_in_strategy=fill_in_strategy, maximize=False,
-                 X=X)
-method.run_optimization(max_iter=300)
+                 X=X,)
+method.run_optimization(max_iter=300, eps=-1)
