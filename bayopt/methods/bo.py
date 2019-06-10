@@ -2,10 +2,10 @@ from GPyOpt.methods.bayesian_optimization import BayesianOptimization
 from GPyOpt.core.errors import InvalidConfigError
 from bayopt.clock.clock import now_str
 from bayopt import definitions
+from bayopt.utils.utils import mkdir_when_not_exist
 import GPyOpt
 import numpy as np
 import time
-import os
 from copy import deepcopy
 
 
@@ -129,13 +129,10 @@ class BayesianOptimizationCOMP(BayesianOptimization):
             self.initial_Y = deepcopy(self.Y)
 
     def _save(self):
-        try:
-            os.mkdir(definitions.ROOT_DIR + '/storage/' + self.objective_name)
-        except FileExistsError as e:
-            pass
+        mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
 
         dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(self.space.dimensionality) + 'D bo'
-        os.mkdir(dir_name)
+        mkdir_when_not_exist(abs_path=dir_name)
 
         self.save_report(report_file=dir_name + '/report.txt')
         self.save_evaluations(evaluations_file=dir_name + '/evaluation.csv')

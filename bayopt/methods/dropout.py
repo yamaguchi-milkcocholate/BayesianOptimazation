@@ -13,9 +13,9 @@ from bayopt.space.space import get_subspace
 from bayopt.clock.stopwatch import StopWatch
 from bayopt.clock.clock import now_str
 from bayopt import definitions
+from bayopt.utils.utils import mkdir_when_not_exist
 from copy import deepcopy
 import numpy as np
-import os
 
 
 class Dropout(BO):
@@ -396,13 +396,10 @@ class Dropout(BO):
         return self._fill_in_dimensions(samples=suggested_)
 
     def _save(self):
-        try:
-            os.mkdir(definitions.ROOT_DIR + '/storage/' + self.objective_name)
-        except FileExistsError as e:
-            pass
+        mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
         
         dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(self.space.dimensionality) + 'D ' + str(self.fill_in_strategy)
-        os.mkdir(dir_name)
+        mkdir_when_not_exist(abs_path=dir_name)
 
         self.save_report(report_file=dir_name + '/report.txt')
         self.save_evaluations(evaluations_file=dir_name + '/evaluation.csv')
