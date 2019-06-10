@@ -1,8 +1,15 @@
 ###### Requirements without Version Specifiers ######`
 numpy
-scikit-optimize
 pillow
 matplotlib
 pytz
+gpyopt
+GPy
+paramz
+scipy
+scikit-learn
+nlopt
+seaborn
+pandas
 
 ###### Requirements with Version Specifiers ######`
