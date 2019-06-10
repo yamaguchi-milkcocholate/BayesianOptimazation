@@ -15,4 +15,4 @@ f = SchwefelsFunction()
 X = np.array([np.full(dim, 1)])
 method = Dropout(f=f, domain=domain, subspace_dim_size=2, fill_in_strategy=fill_in_strategy, maximize=False,
                  X=X)
-method.run_optimization(max_iter=300)
+method.run_optimization(max_iter=300, eps=-1)

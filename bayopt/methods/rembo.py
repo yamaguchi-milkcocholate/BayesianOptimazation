@@ -4,8 +4,8 @@ from bayesian_optimization.bayesian_optimization.model import GaussianProcessMod
 from bayesian_optimization.bayesian_optimization.acquisition_functions import UpperConfidenceBound
 from bayopt import definitions
 from bayopt.clock.clock import now_str
+from bayopt.utils.utils import mkdir_when_not_exist
 import numpy as np
-import os
 import pickle
 
 
@@ -37,14 +37,11 @@ class REMBO(REMBOOptimizer):
         self._save()
 
     def _save(self):
-        try:
-            os.mkdir(definitions.ROOT_DIR + '/storage/' + self.objective_name)
-        except FileExistsError as e:
-            pass
+        mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
 
         dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(
             self.n_dims) + 'D EM' + str(self.n_embedding_dims)
-        os.mkdir(dir_name)
+        mkdir_when_not_exist(dir_name)
 
         self._save_report(report_file=dir_name + '/report.txt')
         self._save_self(file=dir_name + '/self.pickle')

@@ -34,8 +34,10 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           {'name': 'x29', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           ]
 
-dim = len(domain)
-f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-X = np.array([np.full(dim, 1)])
-method = BayesianOptimizationCOMP(f=f, domain=domain, maximize=True, X=X)
-method.run_optimization(max_iter=500)
+for i in range(10):
+
+    dim = len(domain)
+    f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
+    X = np.array([np.full(dim, 1)])
+    method = BayesianOptimizationCOMP(f=f, domain=domain, maximize=True, X=X)
+    method.run_optimization(max_iter=500)

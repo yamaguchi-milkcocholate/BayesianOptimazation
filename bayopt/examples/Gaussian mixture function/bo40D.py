@@ -1,4 +1,4 @@
-from bayopt.methods.dropout import Dropout
+from bayopt.methods.bo import BayesianOptimizationCOMP
 from bayopt.objective_examples.experiments import GaussianMixtureFunction
 import numpy as np
 
@@ -32,12 +32,22 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           {'name': 'x27', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x28', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x29', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x30', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x31', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x32', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x33', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x34', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x35', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x36', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x37', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x38', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x39', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           ]
 
-dim = len(domain)
-fill_in_strategy = 'random'
-f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-X = np.array([np.full(dim, 1)])
-method = Dropout(f=f, domain=domain, subspace_dim_size=5, fill_in_strategy=fill_in_strategy, maximize=True,
-                 X=X)
-method.run_optimization(max_iter=500)
+for i in range(10):
+
+    dim = len(domain)
+    f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
+    X = np.array([np.full(dim, 1)])
+    method = BayesianOptimizationCOMP(f=f, domain=domain, maximize=True, X=X)
+    method.run_optimization(max_iter=500)

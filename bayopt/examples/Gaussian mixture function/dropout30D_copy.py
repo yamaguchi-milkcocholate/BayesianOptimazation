@@ -34,11 +34,10 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           {'name': 'x29', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           ]
 
-
 dim = len(domain)
-fill_in_strategy = 'mix'
+fill_in_strategy = 'copy'
 f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
 X = np.array([np.full(dim, 1)])
-method = Dropout(f=f, domain=domain, subspace_dim_size=5, fill_in_strategy=fill_in_strategy, maximize=True, mix=0.5,
-                 X=X)
-method.run_optimization(max_iter=500)
+method = Dropout(f=f, domain=domain, subspace_dim_size=1, fill_in_strategy=fill_in_strategy, maximize=True,
+                 )
+method.run_optimization(max_iter=500, eps=0)
