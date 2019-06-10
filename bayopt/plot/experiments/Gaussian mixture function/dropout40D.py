@@ -4,6 +4,7 @@ from bayopt.plot.stats import maximum_locus
 from bayopt.plot.stats import with_confidential
 import numpy as np
 
+all_ = dict()
 
 for fill in ['random', 'copy', 'mix', 'bo']:
     results = load_experiments(
@@ -36,5 +37,17 @@ for fill in ['random', 'copy', 'mix', 'bo']:
     plot.add_data_set(x=x_axis, y=mean)
     plot.add_confidential_area(x=x_axis, mean=mean, std=std)
 
-    plot.set_y(low_lim=0, high_lim=1)
+    all_[fill] = {'x_axis': x_axis, 'mean': mean, 'std': std}
+
+    plot.set_y(low_lim=-0.2, high_lim=1.2)
     plot.finish(option='Gaussian mixture function_40D_' + fill)
+
+plot_all = StaticPlot()
+
+for key, data_ in all_.items():
+    plot_all.add_data_set(x=data_['x_axis'], y=data_['mean'], label=key)
+    plot_all.add_confidential_area(x=data_['x_axis'], mean=data_['mean'], std=data_['std'])
+
+
+plot_all.set_y(low_lim=-0.2, high_lim=1.2)
+plot_all.finish(option='Gaussian mixture function_30D')

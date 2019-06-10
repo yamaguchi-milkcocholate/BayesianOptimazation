@@ -38,7 +38,7 @@ for fill in ['random', 'copy', 'mix', 'bo']:
 
     all_[fill] = {'x_axis': x_axis, 'mean': mean, 'std': std}
 
-    plot.set_y(low_lim=0, high_lim=1)
+    plot.set_y(low_lim=-0.2, high_lim=1.2)
     plot.finish(option='Gaussian mixture function_30D_' + fill)
 
 plot_all = StaticPlot()
@@ -48,5 +48,5 @@ for key, data_ in all_.items():
     plot_all.add_confidential_area(x=data_['x_axis'], mean=data_['mean'], std=data_['std'])
 
 
-plot_all.set_y(low_lim=0, high_lim=1)
+plot_all.set_y(low_lim=-0.2, high_lim=1.2)
 plot_all.finish(option='Gaussian mixture function_30D')
