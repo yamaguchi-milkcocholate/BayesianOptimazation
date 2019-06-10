@@ -38,17 +38,21 @@ def with_confidential(data):
     data = pd.DataFrame(data)
 
     if np.any(data.isnull().values):
+        print(data)
         raise ValueError('Nan exists')
 
-    mean = data.mean()
-    std = data.std()
+    mean = data.mean(axis='columns')
+
+    if len(data.columns) is not 1:
+        std = data.std(axis='columns')
+    else:
+        std = np.zeros(len(data))
 
     data['mean'] = mean
     data['std'] = std
 
-    print(data)
-
     if np.any(data.isnull().values):
+        print(data)
         raise ValueError('Nan exists after inserting mean, std')
 
     return data
