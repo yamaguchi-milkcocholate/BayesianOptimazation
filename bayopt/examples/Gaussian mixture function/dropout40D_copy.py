@@ -50,4 +50,4 @@ f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
 X = np.array([np.full(dim, 1)])
 method = Dropout(f=f, domain=domain, subspace_dim_size=1, fill_in_strategy=fill_in_strategy, maximize=True,
                  )
-method.run_optimization(max_iter=500, eps=-10)
+method.run_optimization(max_iter=500)
