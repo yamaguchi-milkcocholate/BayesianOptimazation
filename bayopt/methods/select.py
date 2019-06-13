@@ -78,14 +78,20 @@ class Select(Dropout):
                     print('np.linalg.LinAlgError')
                     break
 
+                if self.num_acquisitions >= self.max_iter:
+                    break
+
+                self.next_point()
+
                 # --- Update current evaluation time and function evaluations
                 self.num_acquisitions += 1
 
-            if self.num_acquisitions >= self.max_iter:
-                break
+            else:
+                self._update_mask_distribution()
+                self._log_distribution()
+                continue
 
-            self._update_mask_distribution()
-            self._log_distribution()
+            break
 
     def _save(self):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
