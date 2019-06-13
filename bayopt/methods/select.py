@@ -32,10 +32,12 @@ class Select(Dropout):
 
         self.sample_num = sample_num
         self.bernoulli_theta = list()
+        self.masks = list()
+        self.evals = list()
 
         # weight function
         non_inc_f = SelectionNonIncFunc(threshold=0.25, negative_weight=True)
-        w = QuantileBasedWeight(non_inc_f=non_inc_f, tie_case=True, normalization=False, min_problem=False)
+        w = QuantileBasedWeight(non_inc_f=non_inc_f, tie_case=True, normalization=False, min_problem=True)
 
         self.bernoulli_igo = BernoulliIGO(d=self.dimensionality, weight_func=w)
 
@@ -45,18 +47,20 @@ class Select(Dropout):
             self.subspace_idx = np.array(np.where(mask == True)[0])
 
             if len(self.subspace_idx) is not 0:
+                self.masks.append(mask)
                 break
 
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
 
-    def _update_mask_distribution(self):
-        if self.Y_new.shape is tuple([self.sample_num, 1]):
-            raise ValueError('Y_new must be a 2d array-like')
+    def _update_distribution(self):
+        if len(self.masks) is not self.sample_num:
+            raise ValueError('masks are not ' + str(self.sample_num))
 
-        if self.suggested_sample is tuple([self.sample_num, self.dimensionality]):
-            raise ValueError('suggested_sample must be a 2d array-like')
+        if len(self.evals) is not self.sample_num:
+            raise ValueError('evals are not ' + str(self.sample_num))
 
-        self.bernoulli_igo.update(X=self.suggested_sample, evals=self.Y_new[:, 0])
+        self.bernoulli_igo.update(X=np.array(self.masks), evals=np.array(self.evals))
+        self._clear_igo_cache()
 
     def sample_mask(self):
         return self.bernoulli_igo.model.sampling(lam=1)
@@ -87,11 +91,19 @@ class Select(Dropout):
                 self.num_acquisitions += 1
 
             else:
-                self._update_mask_distribution()
+                self._update_distribution()
                 self._log_distribution()
                 continue
 
             break
+
+    def evaluate_objective(self):
+        super().evaluate_objective()
+        self.evals.append(self.Y_new[0][0])
+
+    def _clear_igo_cache(self):
+        self.masks = list()
+        self.evals = list()
 
     def _save(self):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
