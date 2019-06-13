@@ -40,8 +40,12 @@ class Select(Dropout):
         self.bernoulli_igo = BernoulliIGO(d=self.dimensionality, weight_func=w)
 
     def update_subspace(self):
-        mask = self.sample_mask()[0]
-        self.subspace_idx = np.array(np.where(mask == True)[0])
+        while True:
+            mask = self.sample_mask()[0]
+            self.subspace_idx = np.array(np.where(mask == True)[0])
+
+            if len(self.subspace_idx) is not 0:
+                break
 
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
 
