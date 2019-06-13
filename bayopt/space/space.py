@@ -3,7 +3,7 @@ from GPyOpt.core.task.space import Design_space
 
 def initialize_space(domain, constraints):
     if not isinstance(domain, list):
-        raise ValueError('domain has to be a dict')
+        raise ValueError('domain has to be a list')
 
     for idx, dim in enumerate(domain):
         dim['name'] = str(idx)
