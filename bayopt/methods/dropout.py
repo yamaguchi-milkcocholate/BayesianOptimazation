@@ -215,7 +215,7 @@ class Dropout(BO):
 
         # --- Initialize iterations and running time
         stopwatch = StopWatch()
-        self.num_acquisitions = 0
+        self.num_acquisitions = self.initial_design_numdata
         self.suggested_sample = self.X
         self.Y_new = self.Y
         self._compute_results()

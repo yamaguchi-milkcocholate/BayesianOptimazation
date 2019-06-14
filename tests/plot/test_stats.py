@@ -40,7 +40,5 @@ class TestStats(unittest.TestCase):
 
         results = with_confidential(data)
 
-        print(results)
-
         self.assertEqual(results.values.shape[0], 2)
         self.assertEqual(results.values.shape[1], 5)
