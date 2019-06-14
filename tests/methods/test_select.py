@@ -1,5 +1,4 @@
 import unittest
-import numpy as np
 from bayopt.methods.select import Select
 from tests.utils.example_function import ExampleFunction
 
@@ -20,4 +19,6 @@ class TestSelect(unittest.TestCase):
     def test_example(self):
         method = Select(fill_in_strategy='random', f=self.f, domain=self.domain)
         method.run_optimization(max_iter=10)
+        self.assertEqual(method.num_acquisitions, 10)
+        self.assertEqual(len(method.bernoulli_theta), 4)
         self.assertTrue(True)
