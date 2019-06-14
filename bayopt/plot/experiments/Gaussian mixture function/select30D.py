@@ -6,16 +6,14 @@ import numpy as np
 
 all_ = dict()
 
-for fill in ['random', 'copy', 'mix', 'bo']:
+for fill in ['random_select', 'copy_select', 'mix_select']:
     results = load_experiments(
         function_name='Gaussian mixture function',
         start=None,
         end=None,
-        dim='40D',
+        dim='30D',
         feature=fill,
-        iter_check=501
     )
-
     results = results * -1
 
     data = list()
@@ -40,7 +38,7 @@ for fill in ['random', 'copy', 'mix', 'bo']:
     all_[fill] = {'x_axis': x_axis, 'mean': mean, 'std': std}
 
     plot.set_y(low_lim=-0.2, high_lim=1.2)
-    plot.finish(option='Gaussian mixture function_40D_' + fill)
+    plot.finish(option='Gaussian mixture function_30D_' + fill)
 
 plot_all = StaticPlot()
 
@@ -50,4 +48,4 @@ for key, data_ in all_.items():
 
 
 plot_all.set_y(low_lim=-0.2, high_lim=1.2)
-plot_all.finish(option='Gaussian mixture function_40D')
+plot_all.finish(option='Gaussian mixture function_30D')

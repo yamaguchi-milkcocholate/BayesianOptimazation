@@ -6,16 +6,14 @@ import numpy as np
 
 all_ = dict()
 
-for fill in ['random', 'copy', 'mix', 'bo']:
+for fill in ['random_select', 'copy_select', 'mix_select']:
     results = load_experiments(
         function_name='Gaussian mixture function',
         start=None,
         end=None,
         dim='40D',
         feature=fill,
-        iter_check=501
     )
-
     results = results * -1
 
     data = list()

@@ -76,7 +76,7 @@ def load_files(function_name, start=None, end=None, **kwargs):
                 is_append = False
 
         for kwd in kwargs:
-            if not (kwargs[kwd] in dim or kwargs[kwd] in feature):
+            if not (kwargs[kwd] == dim or kwargs[kwd] == feature):
                 is_append = False
 
         if is_append:
