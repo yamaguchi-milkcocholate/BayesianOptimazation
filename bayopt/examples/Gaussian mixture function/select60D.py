@@ -51,10 +51,20 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           {'name': 'x47', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x48', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x49', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x50', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x51', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x52', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x53', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x54', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x55', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x56', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x57', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x58', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x59', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           ]
 
 
-for i in range(4):
+for i in range(5):
 
     dim = len(domain)
     fill_in_strategy = 'random'
