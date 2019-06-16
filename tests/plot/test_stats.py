@@ -41,4 +41,4 @@ class TestStats(unittest.TestCase):
         results = with_confidential(data)
 
         self.assertEqual(results.values.shape[0], 2)
-        self.assertEqual(results.values.shape[1], 5)
+        self.assertEqual(results.values.shape[1], 8)
