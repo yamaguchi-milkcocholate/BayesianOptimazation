@@ -37,6 +37,9 @@ def minimum_locus(data):
 def with_confidential(data):
     data = pd.DataFrame(data)
 
+    if len(data) == 0:
+        raise ValueError('No Data')
+
     if np.any(data.isnull().values):
         print(data)
         raise ValueError('Nan exists')
@@ -48,8 +51,14 @@ def with_confidential(data):
     else:
         std = np.zeros(len(data))
 
+    median = data.median(axis='columns')
+    quantile = data.quantile(q=[0.25, 0.75], axis=1)
+
     data['mean'] = mean
     data['std'] = std
+    data['median'] = median
+    data['upper'] = quantile.loc[0.75, :]
+    data['lower'] = quantile.loc[0.25, :]
 
     if np.any(data.isnull().values):
         print(data)

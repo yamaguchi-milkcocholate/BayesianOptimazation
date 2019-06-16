@@ -29,11 +29,12 @@ class StaticPlot(Plot):
         else:
             self.__plt.plot(x, y)
 
-    def add_confidential_area(self, x, mean, std):
-        if len(mean) != len(std):
+    def add_confidential_area(self, x, upper_confidential_bound, lower_confidential_bound):
+
+        if len(upper_confidential_bound) != len(lower_confidential_bound):
             raise ValueError()
 
-        self.__plt.fill_between(x, mean - std, mean + std, alpha=0.25)
+        self.__plt.fill_between(x, lower_confidential_bound, upper_confidential_bound, alpha=0.25)
 
     def set_y(self, low_lim=None, high_lim=None):
         if low_lim is not None and high_lim is not None:
