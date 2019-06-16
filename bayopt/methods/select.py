@@ -35,6 +35,8 @@ class Select(Dropout):
         self.masks = list()
         self.evals = list()
 
+        self.log_masks = list()
+
         # weight function
         non_inc_f = SelectionNonIncFunc(threshold=0.25, negative_weight=True)
         w = QuantileBasedWeight(non_inc_f=non_inc_f, tie_case=True, normalization=False, min_problem=True)
@@ -48,6 +50,7 @@ class Select(Dropout):
 
             if len(self.subspace_idx) is not 0:
                 self.masks.append(mask)
+                self.log_masks.append(mask)
                 break
 
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
@@ -116,6 +119,10 @@ class Select(Dropout):
         self.save_evaluations(evaluations_file=dir_name + '/evaluation.csv')
         self.save_models(models_file=dir_name + '/model.csv')
         self.save_distribution(distribution_file=dir_name + '/distribution.csv')
+        self.save_mask(mask_file=dir_name + '/mask.csv')
 
     def save_distribution(self, distribution_file):
         self._write_csv(distribution_file, self.bernoulli_theta)
+
+    def save_mask(self, mask_file):
+        self._write_csv(mask_file, self.log_masks)
