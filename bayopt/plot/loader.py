@@ -16,13 +16,15 @@ def load_experiments(function_name, dim, feature, start=None, end=None, iter_che
         y = csv_to_numpy(file=evaluation_file)
 
         if iter_check:
-            if len(y) != iter_check:
-                print(expt + ': expect ' + str(iter_check) + ' given ' + str(len(y)))
+            if len(y) < iter_check:
+                print('Error in ' + expt + ': expect ' + str(iter_check) + ' given ' + str(len(y)))
                 # rmdir_when_any(expt)
                 raise ValueError('iterations is not enough')
 
         results.append(y)
         print(expt)
+
+    results = make_uniform_by_length(results)
 
     results = np.array(results, dtype=np.float)
     return results
@@ -83,3 +85,15 @@ def load_files(function_name, start=None, end=None, **kwargs):
             masked.append(storage_dir + '/' + expt)
 
     return masked
+
+
+def make_uniform_by_length(list_obj):
+    list_ = list()
+
+    lengths = [len(el) for el in list_obj]
+    min_len = min(lengths)
+
+    for el in list_obj:
+        list_.append(el[0:min_len])
+
+    return list_

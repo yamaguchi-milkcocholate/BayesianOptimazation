@@ -5,7 +5,7 @@ from bayopt.plot.stats import with_confidential
 import numpy as np
 
 
-def plot_experiments(function_name, dim, method, is_median=False, single=False):
+def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None):
 
     data = dict()
 
@@ -16,6 +16,7 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False):
             end=None,
             dim=dim,
             feature=fill,
+            iter_check=iter_check
         )
         results = results * -1
 
