@@ -14,6 +14,7 @@ def load_experiments(function_name, dim, feature, start=None, end=None, iter_che
     for expt in experiments:
         evaluation_file = expt + '/evaluation.csv'
         y = csv_to_numpy(file=evaluation_file)
+        y = y[:, 1]
 
         if iter_check:
             if len(y) < iter_check:
@@ -26,19 +27,45 @@ def load_experiments(function_name, dim, feature, start=None, end=None, iter_che
 
     results = make_uniform_by_length(results)
 
-    results = np.array(results, dtype=np.float)
-    return results
+    return np.array(results, dtype=np.float)
 
 
-def csv_to_numpy(file):
+def load_experiments_theta(function_name, dim, feature, created_at, update_check=None):
+    experiments = load_files(
+        function_name=function_name, start=created_at, end=created_at, dim=dim, feature=feature)
+
+    if len(experiments) == 0:
+        raise FileNotFoundError('zero experiments')
+
+    if len(experiments) > 1:
+        raise ValueError('2 more file exist.')
+
+    expt = experiments[0]
+
+    distribution_file = expt + '/distribution.csv'
+    theta = csv_to_numpy(distribution_file, header=False)
+
+    if update_check:
+        if len(theta) < update_check:
+            print('expect ' + str(update_check) + ' given ' + str(len(theta)))
+
+            raise ValueError('the number of updating is not enough')
+
+    print(expt)
+
+    return np.array(theta, dtype=np.float)
+
+
+def csv_to_numpy(file, header=True):
     y = list()
 
     with open(file, 'r') as f:
         reader = csv.reader(f, delimiter="\t")
-        header = next(reader)  # ヘッダーを読み飛ばしたい時
+        if header:
+            next(reader)  # ヘッダーを読み飛ばしたい時
 
         for row in reader:
-            y.append(row[1])
+            y.append(row)
     return np.array(y, dtype=np.float)
 
 
@@ -70,11 +97,11 @@ def load_files(function_name, start=None, end=None, **kwargs):
         is_append = True
 
         if start:
-            if expt_time <= start:
+            if expt_time < start:
                 is_append = False
 
         if end:
-            if end <= expt_time:
+            if end < expt_time:
                 is_append = False
 
         for kwd in kwargs:
@@ -88,9 +115,13 @@ def load_files(function_name, start=None, end=None, **kwargs):
 
 
 def make_uniform_by_length(list_obj):
+    if len(list_obj) is 0:
+        return list()
+
     list_ = list()
 
     lengths = [len(el) for el in list_obj]
+
     min_len = min(lengths)
 
     for el in list_obj:

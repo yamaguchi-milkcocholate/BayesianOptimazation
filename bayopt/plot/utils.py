@@ -1,7 +1,10 @@
 from bayopt.plot.loader import load_experiments
+from bayopt.plot.loader import load_experiments_theta
 from bayopt.plot.staticplot import StaticPlot
+from bayopt.plot.staticplot import BarPlot
 from bayopt.plot.stats import maximum_locus
 from bayopt.plot.stats import with_confidential
+from bayopt.plot.stats import histogram
 import numpy as np
 
 
@@ -64,3 +67,17 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False, 
         plot_all.finish(option=function_name + '_' + dim + '_median')
     else:
         plot_all.finish(option=function_name + '_' + dim + '_mean')
+
+
+def plot_experiment_theta(function_name, dim, method, created_at, update_idx, update_check=None):
+    theta = load_experiments_theta(
+        function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
+    )
+
+    theta = theta[update_idx]
+
+    x, y = histogram(data=theta, start=0.0, stop=1.0, step=0.1)
+
+    plot = BarPlot()
+    plot.add_data_set(x=x, y=y)
+    plot.finish(option=function_name + '_' + dim + '_theta')

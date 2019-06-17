@@ -65,3 +65,16 @@ def with_confidential(data):
         raise ValueError('Nan exists after inserting mean, std')
 
     return data
+
+
+def histogram(data, start, stop, step):
+    x = np.arange(start=start, stop=stop + step, step=step)
+    y = list()
+
+    for i in range(len(x) - 1):
+        if i == (len(x) - 2):
+            y.append(np.count_nonzero((x[i] <= data) & (data <= x[i + 1])))
+        else:
+            y.append(np.count_nonzero((x[i] <= data) & (data < x[i + 1])))
+
+    return np.round(x[:-1], 1).astype(np.str), np.array(y)
