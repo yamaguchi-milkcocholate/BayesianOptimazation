@@ -56,7 +56,7 @@ class HeatMap(Plot):
     def _create_plot(cls):
         return StaticPlot()
 
-    def add_data_set(self, data, x_label, y_label, space):
+    def add_data_set(self, data, space):
         if not isinstance(space, tuple):
             raise ValueError('space must be a tuple')
 

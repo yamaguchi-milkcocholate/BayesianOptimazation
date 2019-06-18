@@ -33,3 +33,5 @@ class Plot(ABC):
             self._plt.savefig(definitions.ROOT_DIR + "/storage/images/" + clock.now_str() + '_' + option)
         else:
             self._plt.savefig(definitions.ROOT_DIR + "/storage/images/" + clock.now_str())
+
+        self._plt.cla()

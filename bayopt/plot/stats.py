@@ -94,3 +94,18 @@ def pivot_table(data):
     df = pd.DataFrame(df)
     df_pivot = pd.pivot_table(data=df, values='theta', columns='iteration', index='dimension', aggfunc=np.mean)
     return df_pivot
+
+
+def to_zero_one(data):
+    def f(x):
+        if x == 'True':
+            return 1
+        else:
+            return 0
+
+    return np.vectorize(f)(data)
+
+
+def count_true(data):
+    data = to_zero_one(data)
+    return np.apply_along_axis(np.sum, 1, data)

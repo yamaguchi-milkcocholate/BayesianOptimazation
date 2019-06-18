@@ -31,6 +31,38 @@ def load_experiments(function_name, dim, feature, start=None, end=None, iter_che
 
 
 def load_experiments_theta(function_name, dim, feature, created_at, update_check=None):
+    expt = _load_experiment(function_name=function_name, created_at=created_at, dim=dim,
+                            feature=feature)
+
+    expt_file = expt + '/distribution.csv'
+    data = csv_to_numpy(expt_file, header=False)
+
+    if update_check:
+        if len(data) < update_check:
+            print('expect ' + str(update_check) + ' given ' + str(len(data)))
+
+            raise ValueError('Not Enough')
+
+    return data
+
+
+def load_experiments_mask(function_name, dim, feature, created_at, update_check=None):
+    expt = _load_experiment(function_name=function_name, created_at=created_at, dim=dim,
+                            feature=feature)
+
+    expt_file = expt + '/mask.csv'
+    data = csv_to_numpy(expt_file, header=False, dtype='str')
+
+    if update_check:
+        if len(data) < update_check:
+            print('expect ' + str(update_check) + ' given ' + str(len(data)))
+
+            raise ValueError('Not Enough')
+
+    return data
+
+
+def _load_experiment(function_name, created_at, dim, feature):
     experiments = load_files(
         function_name=function_name, start=created_at, end=created_at, dim=dim, feature=feature)
 
@@ -42,21 +74,12 @@ def load_experiments_theta(function_name, dim, feature, created_at, update_check
 
     expt = experiments[0]
 
-    distribution_file = expt + '/distribution.csv'
-    theta = csv_to_numpy(distribution_file, header=False)
-
-    if update_check:
-        if len(theta) < update_check:
-            print('expect ' + str(update_check) + ' given ' + str(len(theta)))
-
-            raise ValueError('the number of updating is not enough')
-
     print(expt)
 
-    return np.array(theta, dtype=np.float)
+    return expt
 
 
-def csv_to_numpy(file, header=True):
+def csv_to_numpy(file, header=True, dtype='float'):
     y = list()
 
     with open(file, 'r') as f:
@@ -66,7 +89,12 @@ def csv_to_numpy(file, header=True):
 
         for row in reader:
             y.append(row)
-    return np.array(y, dtype=np.float)
+
+    if dtype is 'float':
+        return np.array(y, dtype=np.float)
+
+    elif dtype is 'str':
+        return np.array(y, dtype=np.str)
 
 
 def load_files(function_name, start=None, end=None, **kwargs):
