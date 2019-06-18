@@ -78,3 +78,19 @@ def histogram(data, start, stop, step):
             y.append(np.count_nonzero((x[i] <= data) & (data < x[i + 1])))
 
     return np.round(x[:-1], 1).astype(np.str), np.array(y)
+
+
+def pivot_table(data):
+
+    df = {'theta': list(), 'iteration': list(), 'dimension': list()}
+
+    for iteration_idx in range(len(data)):
+        for dim_idx in range(len(data[iteration_idx])):
+
+            df['theta'].append(data[iteration_idx][dim_idx])
+            df['iteration'].append(iteration_idx + 1)
+            df['dimension'].append(dim_idx + 1)
+
+    df = pd.DataFrame(df)
+    df_pivot = pd.pivot_table(data=df, values='theta', columns='iteration', index='dimension', aggfunc=np.mean)
+    return df_pivot

@@ -1,19 +1,10 @@
 from bayopt.plot.plot import Plot
-from matplotlib import pyplot as plt
-import seaborn as sns
-from bayopt import definitions
-from bayopt.clock import clock
-from bayopt.utils.utils import mkdir_when_not_exist
 
 
 class StaticPlot(Plot):
 
     def __init__(self):
-        self.sns = sns
-        self.sns.set()
-        self._plt = plt
-        self.__figure = plt.figure(figsize=(10, 6))
-        self._plt.cla()
+        super().__init__()
 
     @classmethod
     def get_plot(cls):
@@ -42,13 +33,6 @@ class StaticPlot(Plot):
 
         self._plt.legend(loc='upper left')
 
-    def finish(self, option=None):
-        mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/images')
-        if option:
-            self._plt.savefig(definitions.ROOT_DIR + "/storage/images/" + clock.now_str() + '_' + option)
-        else:
-            self._plt.savefig(definitions.ROOT_DIR + "/storage/images/" + clock.now_str())
-
 
 class BarPlot(StaticPlot):
 
@@ -57,3 +41,23 @@ class BarPlot(StaticPlot):
 
     def add_data_set(self, x, y, label=None):
         self._plt.bar(x, y, width=0.8)
+
+
+class HeatMap(Plot):
+
+    def __init__(self):
+        super().__init__()
+
+    @classmethod
+    def get_plot(cls):
+        super().get_plot()
+
+    @classmethod
+    def _create_plot(cls):
+        return StaticPlot()
+
+    def add_data_set(self, data, x_label, y_label, space):
+        if not isinstance(space, tuple):
+            raise ValueError('space must be a tuple')
+
+        self.sns.heatmap(data, vmin=space[0], vmax=space[1], cmap='Blues')
