@@ -121,9 +121,20 @@ def plot_experiment_subspace_dimensionality(function_name, dim, method, created_
         function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
     )
 
+    iter_num = len(mask)
+
+    # 1 step: ~100
+    plot = BarPlot()
+    x = np.arange(0, 100)
+    plot.add_data_set(x=x, y=count_true(mask[0:100]), label='subspace dimensionality by 100')
+    plot.finish(option=function_name + '_' + dim + 'subspace_dimensionality_by_100')
+
     # 5 step
-    mask = count_true(mask)[np.arange(0, len(mask) + 1, 5)]
+    step = 5
+    mask_ = count_true(mask)[np.arange(0, len(mask), step)]
 
     plot = BarPlot()
-    plot.add_data_set(x=np.arange(len(mask)), y=mask, label='subspace dimensionality')
+    x = np.arange(0, len(mask_))
+    plot.add_data_set(x=x, y=mask_, label='subspace dimensionality')
+    plot.set_x(x=x[np.arange(0, len(x), step)], x_ticks=np.arange(0, iter_num, step * step))
     plot.finish(option=function_name + '_' + dim + 'subspace_dimensionality')

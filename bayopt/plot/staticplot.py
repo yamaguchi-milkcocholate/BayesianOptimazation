@@ -40,7 +40,10 @@ class BarPlot(StaticPlot):
         super().__init__()
 
     def add_data_set(self, x, y, label=None):
-        self._plt.bar(x, y, width=0.8)
+        self._plt.bar(x, y, width=1.0)
+
+    def set_x(self, x, x_ticks):
+        self._plt.xticks(x, x_ticks, )
 
 
 class HeatMap(Plot):
