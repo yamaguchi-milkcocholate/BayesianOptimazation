@@ -133,6 +133,10 @@ class Dropout(BO):
         )
 
     @property
+    def dimensionality(self):
+        return self.space.objective_dimensionality
+
+    @property
     def subspace_domain(self):
         return self.subspace.config_space
 
@@ -211,33 +215,12 @@ class Dropout(BO):
 
         # --- Initialize iterations and running time
         stopwatch = StopWatch()
-        self.num_acquisitions = 0
+        self.num_acquisitions = self.initial_design_numdata
         self.suggested_sample = self.X
         self.Y_new = self.Y
         self._compute_results()
 
-        while self.max_time > stopwatch.passed_time():
-            print('.')
-
-            # --- update model
-            try:
-                self.update()
-
-            except np.linalg.LinAlgError:
-                break
-
-            if (self.num_acquisitions >= self.max_iter
-                    or (len(self.X) > 1 and self._distance_last_evaluations() <= self.eps)):
-                break
-
-            self.next_point()
-
-            # --- Update current evaluation time and function evaluations
-            self.num_acquisitions += 1
-
-            if verbosity:
-                print("num acquisition: {}, time elapsed: {:.2f}s".format(
-                    self.num_acquisitions, stopwatch.passed_time()))
+        self._run_optimization()
 
         self.cum_time = stopwatch.passed_time()
 
@@ -253,6 +236,26 @@ class Dropout(BO):
             self.save_models(self.models_file)
 
         self._save()
+
+    def _run_optimization(self):
+        while True:
+            print('.')
+
+            # --- update model
+            try:
+                self.update()
+
+            except np.linalg.LinAlgError:
+                print('np.linalg.LinAlgError')
+                break
+
+            if self.num_acquisitions >= self.max_iter:
+                break
+
+            self.next_point()
+
+            # --- Update current evaluation time and function evaluations
+            self.num_acquisitions += 1
 
     def next_point(self):
         self.suggested_sample = self._compute_next_evaluations()
@@ -315,7 +318,7 @@ class Dropout(BO):
             return self._dropout_mix(embedded_idx=embedded_idx)
 
     def _fill_in_dimensions(self, samples):
-        full_num = self.space.objective_dimensionality
+        full_num = self.dimensionality
         subspace_idx = self.subspace_idx
         embedded_idx = [i for i in range(full_num) if i not in subspace_idx]
 
@@ -354,14 +357,7 @@ class Dropout(BO):
             self.model = self._arguments_mng.model_creator(
                 model_type=self.model_type, exact_feval=self.exact_feval, space=self.subspace)
 
-            # input that goes into the model (is unziped in case there are categorical variables)
-            X_inmodel = self.subspace.unzip_inputs(np.array([xi[self.subspace_idx] for xi in self.X]))
-
-            # Y_inmodel is the output that goes into the model
-            if self.normalize_Y:
-                Y_inmodel = normalize(self.Y, normalization_type)
-            else:
-                Y_inmodel = self.Y
+            X_inmodel, Y_inmodel = self._input_data(normalization_type=normalization_type)
 
             self.model.updateModel(X_inmodel, Y_inmodel, None, None)
             self.X_inmodel = X_inmodel
@@ -370,9 +366,21 @@ class Dropout(BO):
         # Save parameters of the model
         self._save_model_parameter_values()
 
+    def _input_data(self, normalization_type):
+        # input that goes into the model (is unziped in case there are categorical variables)
+        X_inmodel = self.subspace.unzip_inputs(np.array([xi[self.subspace_idx] for xi in self.X]))
+
+        # Y_inmodel is the output that goes into the model
+        if self.normalize_Y:
+            Y_inmodel = normalize(self.Y, normalization_type)
+        else:
+            Y_inmodel = self.Y
+
+        return X_inmodel, Y_inmodel
+
     def update_subspace(self):
         self.subspace_idx = np.sort(np.random.choice(
-            range(self.space.objective_dimensionality),
+            range(self.dimensionality),
             self.subspace_dim_size, replace=False))
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
 
@@ -398,7 +406,7 @@ class Dropout(BO):
     def _save(self):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
         
-        dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(self.space.dimensionality) + 'D ' + str(self.fill_in_strategy)
+        dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(self.dimensionality) + 'D ' + str(self.fill_in_strategy)
         mkdir_when_not_exist(abs_path=dir_name)
 
         self.save_report(report_file=dir_name + '/report.txt')
@@ -426,7 +434,7 @@ class Dropout(BO):
             file.write('\n')
             file.write('--------------------------------' + ' Problem set up ' + '------------------------------------\n')
             file.write('Problem name:                ' + self.objective_name +'\n')
-            file.write('Problem dimension:           ' + str(self.space.dimensionality) +'\n')
+            file.write('Problem dimension:           ' + str(self.dimensionality) +'\n')
             file.write('Number continuous variables  ' + str(len(self.space.get_continuous_dims()) ) +'\n')
             file.write('Number discrete variables    ' + str(len(self.space.get_discrete_dims())) +'\n')
             file.write('Number bandits               ' + str(self.space.get_bandit().shape[0]) +'\n')
