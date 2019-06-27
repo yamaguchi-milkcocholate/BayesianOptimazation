@@ -1,4 +1,4 @@
-from bayopt.methods.bo import BayesianOptimizationCOMP
+from bayopt.methods.bo import BayesianOptimizationExt
 from bayopt.objective_examples.experiments import SchwefelsFunction
 import numpy as np
 
@@ -12,5 +12,5 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (-1, 1), 'dimensionalit
 dim = len(domain)
 f = SchwefelsFunction()
 X = np.array([np.full(dim, 1)])
-method = BayesianOptimizationCOMP(f=f, domain=domain, maximize=False, X=X)
+method = BayesianOptimizationExt(f=f, domain=domain, maximize=False, X=X)
 method.run_optimization(max_iter=300)

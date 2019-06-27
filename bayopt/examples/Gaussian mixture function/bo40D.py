@@ -1,4 +1,4 @@
-from bayopt.methods.bo import BayesianOptimizationCOMP
+from bayopt.methods.bo import BayesianOptimizationExt
 from bayopt.objective_examples.experiments import GaussianMixtureFunction
 import numpy as np
 
@@ -49,5 +49,5 @@ for i in range(10):
     dim = len(domain)
     f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
     X = np.array([np.full(dim, 1)])
-    method = BayesianOptimizationCOMP(f=f, domain=domain, maximize=True, X=X)
+    method = BayesianOptimizationExt(f=f, domain=domain, maximize=True, X=X)
     method.run_optimization(max_iter=500)

@@ -9,7 +9,7 @@ import time
 from copy import deepcopy
 
 
-class BayesianOptimizationCOMP(BayesianOptimization):
+class BayesianOptimizationExt(BayesianOptimization):
 
     def __init__(self, f, domain=None, constraints=None, cost_withGradients=None, model_type='GP',
                  X=None, Y=None, initial_design_numdata=1, initial_design_type='random', acquisition_type='LCB',
@@ -17,7 +17,7 @@ class BayesianOptimizationCOMP(BayesianOptimization):
                  evaluator_type='sequential', batch_size=1, num_cores=1, verbosity=False, verbosity_model=False,
                  maximize=False, de_duplication=False):
 
-        super(BayesianOptimizationCOMP, self).__init__(
+        super(BayesianOptimizationExt, self).__init__(
             f, domain=domain, constraints=constraints, cost_withGradients=cost_withGradients,
             model_type=model_type, X=X, Y=Y, initial_design_numdata=initial_design_numdata,
             initial_design_type=initial_design_type, acquisition_type=acquisition_type, normalize_Y=normalize_Y,
