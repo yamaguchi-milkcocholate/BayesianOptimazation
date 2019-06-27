@@ -46,7 +46,7 @@ class BraininFunction:
     def __call__(self, x):
         x1 = x[0][self.effective1]
         x2 = x[0][self.effective2]
-        return (x2 - (5.1*(x2**2)/(4*(np.pi**2))) + 5*x1/np.pi - 6)**2 + 10*(1-1/(8*np.pi))*np.cos(x1) + 10
+        return ((x2 - (5.1*(x2**2)/(4*(np.pi**2))) + 5*x1/np.pi - 6)**2 + 10*(1-1/(8*np.pi))*np.cos(x1) + 10) - 0.397887
 
     def get_function_name(self):
         return self.function_name

@@ -20,6 +20,22 @@ def maximum_locus(data):
 
 def minimum_locus(data):
     if len(data.shape) is not 1:
+        raise ValueError('shape (m, 0)')
+
+    data_ = list()
+    minimum = 0
+
+    for i in range(len(data)):
+        if minimum > data[i]:
+            minimum = data[i]
+
+        data_.append(minimum)
+
+    return np.array(data_)
+
+
+def minimum_locus(data):
+    if len(data.shape) is not 1:
         raise ValueError('shape (n, 0)')
 
     data_ = list()

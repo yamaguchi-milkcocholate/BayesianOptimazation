@@ -76,6 +76,7 @@ class REMBO(BO):
         self.normalize_Y = normalize_Y
         self.de_duplication = de_duplication
         self.subspace_dim_size = subspace_dim_size
+        self.original_domain = domain
 
         # --- property injected in other methods.
         self.verbosity = False
@@ -390,7 +391,7 @@ class REMBO(BO):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
 
         dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(
-            self.dimensionality) + 'D REMBO_' + str(self.subspace_dim_size)
+            len(self.original_domain)) + 'D REMBO_' + str(self.subspace_dim_size)
         mkdir_when_not_exist(abs_path=dir_name)
 
         self.save_report(report_file=dir_name + '/report.txt')

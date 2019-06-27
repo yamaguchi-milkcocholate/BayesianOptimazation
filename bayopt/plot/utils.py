@@ -6,6 +6,7 @@ from bayopt.plot.staticplot import StaticPlot
 from bayopt.plot.staticplot import BarPlot
 from bayopt.plot.staticplot import HeatMap
 from bayopt.plot.stats import maximum_locus
+from bayopt.plot.stats import minimum_locus
 from bayopt.plot.stats import with_confidential
 from bayopt.plot.stats import histogram
 from bayopt.plot.stats import pivot_table
@@ -14,7 +15,7 @@ from bayopt.plot.stats import count_true
 import numpy as np
 
 
-def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None):
+def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None, maxmize=True):
 
     data = dict()
 
@@ -27,12 +28,17 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False, 
             feature=fill,
             iter_check=iter_check
         )
-        results = results * -1
 
         results_ = list()
 
-        for i in range(len(results)):
-            results_.append(maximum_locus(results[i]))
+        if maxmize:
+            results = results * -1
+
+            for i in range(len(results)):
+                results_.append(maximum_locus(results[i]))
+        else:
+            for i in range(len(results)):
+                results_.append(minimum_locus(results[i]))
 
         results_ = np.array(results_)
         results_ = results_.T
