@@ -195,7 +195,7 @@ class REMBO(BO):
         return subspace_domain
 
     def map_to_original_space(self, x):
-        if x.shape != (1, 5):
+        if x.shape != (1, self.subspace_dim_size):
             raise ValueError('x.shape is not correct ' + str(x.shape))
 
         x = np.array([np.dot(self.embedding_matrix, el) for el in x])
