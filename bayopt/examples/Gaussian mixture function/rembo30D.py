@@ -1,17 +1,42 @@
-from bayopt.objective_examples.experiments import GaussianMixtureFunction
 from bayopt.methods.rembo import REMBO
-import numpy as np
+from bayopt.objective_examples.experiments import GaussianMixtureFunction
+
+domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x1', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x2', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x3', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x4', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x5', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x6', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x7', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x8', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x9', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x10', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x11', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x12', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x13', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x14', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x15', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x16', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x17', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x18', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x19', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x20', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x21', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x22', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x23', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x24', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x25', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x26', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x27', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x28', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          {'name': 'x29', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
+          ]
 
 
-for i in range(5):
+for i in range(1):
 
-    n_dims = 30
-    data_space = np.array([[1, 4] for j in range(n_dims)])
-    f = GaussianMixtureFunction(dim=n_dims, mean_1=2, mean_2=3)
-    n_embedding_dims = 5
-    n_repetitions = 10
-    n_trials = 100
-    kappa = 2.5
-
-    method = REMBO(f=f, n_dims=n_dims, n_embedding_dims=n_embedding_dims, data_space=data_space)
-    method.run_optimization(max_iter=500)
+    dim = len(domain)
+    f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
+    method = REMBO(f=f, domain=domain, subspace_dim_size=5, maximize=True)
+    method.run_optimization(max_iter=500, eps=0)
