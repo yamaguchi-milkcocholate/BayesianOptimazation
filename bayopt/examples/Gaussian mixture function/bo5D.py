@@ -12,5 +12,5 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
 dim = len(domain)
 f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
 X = np.array([np.full(dim, 1)])
-method = BayesianOptimizationExt(f=f, domain=domain, maximize=True, X=X)
-method.run_optimization(max_iter=300)
+method = BayesianOptimizationExt(f=f, domain=domain, maximize=True, X=X, ard=True)
+method.run_optimization(max_iter=100)

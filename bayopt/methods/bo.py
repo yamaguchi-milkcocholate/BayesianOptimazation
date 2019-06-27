@@ -15,7 +15,7 @@ class BayesianOptimizationExt(BayesianOptimization):
                  X=None, Y=None, initial_design_numdata=1, initial_design_type='random', acquisition_type='LCB',
                  normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_interval=1,
                  evaluator_type='sequential', batch_size=1, num_cores=1, verbosity=False, verbosity_model=False,
-                 maximize=False, de_duplication=False):
+                 maximize=False, de_duplication=False, ard=False):
 
         super(BayesianOptimizationExt, self).__init__(
             f, domain=domain, constraints=constraints, cost_withGradients=cost_withGradients,
@@ -24,9 +24,10 @@ class BayesianOptimizationExt(BayesianOptimization):
             exact_feval=exact_feval, acquisition_optimizer_type=acquisition_optimizer_type,
             model_update_interval=model_update_interval, evaluator_type=evaluator_type,
             batch_size=batch_size, num_cores=num_cores, verbosity=verbosity, verbosity_model=verbosity_model,
-            maximize=maximize, de_duplication=de_duplication)
+            maximize=maximize, de_duplication=de_duplication, ARD=ard)
 
         self.objective_name = f.get_function_name()
+        self.ard = ard
 
     def run_optimization(self, max_iter=0, max_time=np.inf,  eps=1e-8, context=None, verbosity=False, save_models_parameters=True, report_file=None, evaluations_file=None, models_file=None):
         if self.objective is None:
@@ -182,6 +183,7 @@ class BayesianOptimizationExt(BayesianOptimization):
                 file.write('Acquisition optimizer:       None\n')
             file.write('Evaluator type (batch size): ' + str(self.evaluator_type).strip('[]') + ' (' + str(self.batch_size) + ')' + '\n')
             file.write('Cores used:                  ' + str(self.num_cores) + '\n')
+            file.write('ARD used:                    ' + str(self.ard) + '\n')
 
             file.write('\n')
             file.write('---------------------------------' + ' Summary ' + '------------------------------------------\n')
