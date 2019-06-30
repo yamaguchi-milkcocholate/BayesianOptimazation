@@ -1,19 +1,10 @@
 from bayopt.plot.plot import Plot
-from matplotlib import pyplot as plt
-import seaborn as sns
-from bayopt import definitions
-from bayopt.clock import clock
-from bayopt.utils.utils import mkdir_when_not_exist
 
 
 class StaticPlot(Plot):
 
     def __init__(self):
-        self.sns = sns
-        self.sns.set()
-        self.__plt = plt
-        self.__figure = plt.figure(figsize=(10, 6))
-        self.__plt.cla()
+        super().__init__()
 
     @classmethod
     def get_plot(cls):
@@ -25,26 +16,51 @@ class StaticPlot(Plot):
 
     def add_data_set(self, x, y, label=None):
         if label:
-            self.__plt.plot(x, y, label=label)
+            self._plt.plot(x, y, label=label)
         else:
-            self.__plt.plot(x, y)
+            self._plt.plot(x, y)
 
     def add_confidential_area(self, x, upper_confidential_bound, lower_confidential_bound):
 
         if len(upper_confidential_bound) != len(lower_confidential_bound):
             raise ValueError()
 
-        self.__plt.fill_between(x, lower_confidential_bound, upper_confidential_bound, alpha=0.25)
+        self._plt.fill_between(x, lower_confidential_bound, upper_confidential_bound, alpha=0.25)
 
     def set_y(self, low_lim=None, high_lim=None):
         if low_lim is not None and high_lim is not None:
-            self.__plt.ylim(low_lim, high_lim)
+            self._plt.ylim(low_lim, high_lim)
 
-        self.__plt.legend(loc='upper left')
+        self._plt.legend(loc='upper left')
 
-    def finish(self, option=None):
-        mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/images')
-        if option:
-            self.__plt.savefig(definitions.ROOT_DIR + "/storage/images/" + clock.now_str() + '_' + option)
-        else:
-            self.__plt.savefig(definitions.ROOT_DIR + "/storage/images/" + clock.now_str())
+
+class BarPlot(StaticPlot):
+
+    def __init__(self):
+        super().__init__()
+
+    def add_data_set(self, x, y, label=None):
+        self._plt.bar(x, y, width=1.0)
+
+    def set_x(self, x, x_ticks):
+        self._plt.xticks(x, x_ticks, )
+
+
+class HeatMap(Plot):
+
+    def __init__(self):
+        super().__init__()
+
+    @classmethod
+    def get_plot(cls):
+        super().get_plot()
+
+    @classmethod
+    def _create_plot(cls):
+        return StaticPlot()
+
+    def add_data_set(self, data, space):
+        if not isinstance(space, tuple):
+            raise ValueError('space must be a tuple')
+
+        self.sns.heatmap(data, vmin=space[0], vmax=space[1], cmap='Blues')

@@ -37,6 +37,8 @@ class Select(Dropout):
 
         self.log_masks = list()
 
+        self.sample_index = None
+
         # weight function
         non_inc_f = SelectionNonIncFunc(threshold=0.25, negative_weight=True)
         w = QuantileBasedWeight(non_inc_f=non_inc_f, tie_case=True, normalization=False, min_problem=True)
@@ -71,10 +73,20 @@ class Select(Dropout):
     def _log_distribution(self):
         self.bernoulli_theta.append(self.bernoulli_igo.model.log())
 
+    def _input_data(self, normalization_type):
+        X_inmodel, Y_inmodel = super()._input_data(normalization_type=normalization_type)
+
+        if self.sample_index >= 1:
+            X_inmodel = X_inmodel[: -self.sample_index]
+            Y_inmodel = Y_inmodel[: -self.sample_index]
+
+        return X_inmodel, Y_inmodel
+
     def _run_optimization(self):
         while True:
 
             for i in range(self.sample_num):
+                self.sample_index = i
                 print('.')
 
                 # --- update model

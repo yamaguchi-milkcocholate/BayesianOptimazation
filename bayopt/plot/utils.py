@@ -1,11 +1,19 @@
 from bayopt.plot.loader import load_experiments
+from bayopt.plot.loader import load_experiments_theta
+from bayopt.plot.loader import load_experiments_mask
 from bayopt.plot.staticplot import StaticPlot
+from bayopt.plot.staticplot import BarPlot
+from bayopt.plot.staticplot import HeatMap
 from bayopt.plot.stats import maximum_locus
 from bayopt.plot.stats import with_confidential
+from bayopt.plot.stats import histogram
+from bayopt.plot.stats import pivot_table
+from bayopt.plot.stats import to_zero_one
+from bayopt.plot.stats import count_true
 import numpy as np
 
 
-def plot_experiments(function_name, dim, method, is_median=False, single=False):
+def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None):
 
     data = dict()
 
@@ -16,6 +24,7 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False):
             end=None,
             dim=dim,
             feature=fill,
+            iter_check=iter_check
         )
         results = results * -1
 
@@ -63,3 +72,69 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False):
         plot_all.finish(option=function_name + '_' + dim + '_median')
     else:
         plot_all.finish(option=function_name + '_' + dim + '_mean')
+
+
+def plot_experiment_theta(function_name, dim, method, created_at, update_check=None):
+    theta = load_experiments_theta(
+        function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
+    )
+
+    heat_map = HeatMap()
+
+    heat_map.add_data_set(data=pivot_table(theta), space=(0, 1))
+    heat_map.finish(option=function_name + '_' + dim + '_theta')
+
+
+def plot_experiment_theta_histogram(function_name, dim, method, created_at, update_idx=None, update_check=None):
+    theta = load_experiments_theta(
+        function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
+    )
+
+    if update_idx:
+        theta = theta[update_idx]
+    else:
+        update_idx = len(theta) - 1
+        theta = theta[-1]
+
+    x, y = histogram(data=theta, start=0.0, stop=1.0, step=0.1)
+
+    plot = BarPlot()
+    plot.add_data_set(x=x, y=y)
+    plot.finish(option=function_name + '_' + dim + '_theta_' + str(update_idx))
+
+
+def plot_experiment_mask(function_name, dim, method, created_at, update_check=None):
+    mask = load_experiments_mask(
+        function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
+    )
+
+    mask = to_zero_one(mask)
+
+    heat_map = HeatMap()
+
+    heat_map.add_data_set(data=pivot_table(mask), space=(0, 1))
+    heat_map.finish(option=function_name + '_' + dim + '_mask')
+
+
+def plot_experiment_subspace_dimensionality(function_name, dim, method, created_at, update_check=None):
+    mask = load_experiments_mask(
+        function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
+    )
+
+    iter_num = len(mask)
+
+    # 1 step: ~100
+    plot = BarPlot()
+    x = np.arange(0, 100)
+    plot.add_data_set(x=x, y=count_true(mask[0:100]), label='subspace dimensionality by 100')
+    plot.finish(option=function_name + '_' + dim + 'subspace_dimensionality_by_100')
+
+    # 5 step
+    step = 5
+    mask_ = count_true(mask)[np.arange(0, len(mask), step)]
+
+    plot = BarPlot()
+    x = np.arange(0, len(mask_))
+    plot.add_data_set(x=x, y=mask_, label='subspace dimensionality')
+    plot.set_x(x=x[np.arange(0, len(x), step)], x_ticks=np.arange(0, iter_num, step * step))
+    plot.finish(option=function_name + '_' + dim + 'subspace_dimensionality')

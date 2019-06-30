@@ -357,14 +357,7 @@ class Dropout(BO):
             self.model = self._arguments_mng.model_creator(
                 model_type=self.model_type, exact_feval=self.exact_feval, space=self.subspace)
 
-            # input that goes into the model (is unziped in case there are categorical variables)
-            X_inmodel = self.subspace.unzip_inputs(np.array([xi[self.subspace_idx] for xi in self.X]))
-
-            # Y_inmodel is the output that goes into the model
-            if self.normalize_Y:
-                Y_inmodel = normalize(self.Y, normalization_type)
-            else:
-                Y_inmodel = self.Y
+            X_inmodel, Y_inmodel = self._input_data(normalization_type=normalization_type)
 
             self.model.updateModel(X_inmodel, Y_inmodel, None, None)
             self.X_inmodel = X_inmodel
@@ -372,6 +365,18 @@ class Dropout(BO):
 
         # Save parameters of the model
         self._save_model_parameter_values()
+
+    def _input_data(self, normalization_type):
+        # input that goes into the model (is unziped in case there are categorical variables)
+        X_inmodel = self.subspace.unzip_inputs(np.array([xi[self.subspace_idx] for xi in self.X]))
+
+        # Y_inmodel is the output that goes into the model
+        if self.normalize_Y:
+            Y_inmodel = normalize(self.Y, normalization_type)
+        else:
+            Y_inmodel = self.Y
+
+        return X_inmodel, Y_inmodel
 
     def update_subspace(self):
         self.subspace_idx = np.sort(np.random.choice(
