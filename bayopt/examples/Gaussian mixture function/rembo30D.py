@@ -38,5 +38,5 @@ for i in range(1):
 
     dim = len(domain)
     f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-    method = REMBO(f=f, domain=domain, subspace_dim_size=5, maximize=True)
+    method = REMBO(f=f, domain=domain, subspace_dim_size=15, maximize=True)
     method.run_optimization(max_iter=500, eps=0)
