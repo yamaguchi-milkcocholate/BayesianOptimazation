@@ -2,6 +2,7 @@ from bayopt.plot.loader import load_experiments
 from bayopt.plot.loader import load_experiments_theta
 from bayopt.plot.loader import load_experiments_mask
 from bayopt.plot.loader import load_experiments_model
+from bayopt.plot.loader import load_experiments_evaluation
 from bayopt.plot.staticplot import StaticPlot
 from bayopt.plot.staticplot import BarPlot
 from bayopt.plot.staticplot import HeatMap
@@ -15,7 +16,8 @@ from bayopt.plot.stats import count_true
 import numpy as np
 
 
-def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None, maximize=True, start=None, end=None):
+def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None,
+                     maximize=True, start=None, end=None):
 
     data = dict()
 
@@ -79,6 +81,22 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False, 
         plot_all.finish(option=function_name + '_' + dim + '_median')
     else:
         plot_all.finish(option=function_name + '_' + dim + '_mean')
+
+
+def plot_experiment_evaluation(function_name, dim, method, created_at, update_check=None, maximize=True):
+    evaluation = load_experiments_evaluation(
+        function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
+    )
+
+    if maximize:
+        evaluation = evaluation * -1
+
+    x_axis = np.arange(0, len(evaluation))
+
+    plot = StaticPlot()
+    plot.add_data_set(x=x_axis, y=evaluation, label=method)
+    plot.set_y(low_lim=-0.2, high_lim=1.2)
+    plot.finish(option=function_name + '_' + method)
 
 
 def plot_experiment_theta(function_name, dim, method, created_at, update_check=None):

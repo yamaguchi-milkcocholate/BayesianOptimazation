@@ -31,6 +31,23 @@ def load_experiments(function_name, dim, feature, start=None, end=None, iter_che
     return np.array(results, dtype=np.float)
 
 
+def load_experiments_evaluation(function_name, dim, feature, created_at, update_check=None):
+    expt = _load_experiment(function_name=function_name, created_at=created_at, dim=dim,
+                            feature=feature)
+
+    expt_file = expt + '/evaluation.csv'
+    data = csv_to_numpy(expt_file, header=True)
+    data = data[:, 1]
+
+    if update_check:
+        if len(data) < update_check:
+            print('expect ' + str(update_check) + ' given ' + str(len(data)))
+
+            raise ValueError('Not Enough')
+
+    return data
+
+
 def load_experiments_theta(function_name, dim, feature, created_at, update_check=None):
     expt = _load_experiment(function_name=function_name, created_at=created_at, dim=dim,
                             feature=feature)
