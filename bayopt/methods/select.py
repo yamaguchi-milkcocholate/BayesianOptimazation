@@ -17,7 +17,8 @@ class SelectBase(Dropout):
     def __init__(self, fill_in_strategy, f, mix=0.5, domain=None, constraints=None, cost_withGradients=None, X=None, Y=None,
                  model_type='GP', initial_design_numdata=2, initial_design_type='random', acquisition_type='LCB',
                  normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_interval=1,
-                 evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False, sample_num=2, eta=None):
+                 evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False,
+                 sample_num=2, eta=None, theta=None):
 
         if initial_design_numdata is not sample_num:
             raise ValueError('initial_design_numdata != sample_num')
@@ -47,7 +48,9 @@ class SelectBase(Dropout):
         non_inc_f = SelectionNonIncFunc(threshold=0.25, negative_weight=True)
         w = QuantileBasedWeight(non_inc_f=non_inc_f, tie_case=True, normalization=False, min_problem=True)
 
-        self.bernoulli_igo = BernoulliIGO(d=self.dimensionality, weight_func=w, eta=eta)
+        if theta:
+            theta = theta * np.ones(self.dimensionality)
+        self.bernoulli_igo = BernoulliIGO(d=self.dimensionality, weight_func=w, eta=eta, theta=theta)
 
     def _choose_evaluator(self):
         self.evaluator = SequentialExt(self.acquisition)
