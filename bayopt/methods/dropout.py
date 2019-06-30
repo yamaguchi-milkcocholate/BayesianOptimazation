@@ -108,11 +108,7 @@ class Dropout(BO):
             cost_withGradients=self.cost_withGradients
         )
 
-        self.evaluator = self._arguments_mng.evaluator_creator(
-            evaluator_type=self.evaluator_type, acquisition=self.acquisition,
-            batch_size=self.batch_size, model_type=self.model_type, model=self.model,
-            space=self.space, acquisition_optimizer=self.acquisition_optimizer
-        )
+        self._choose_evaluator()
 
         self.X = X
         self.Y = Y
@@ -175,6 +171,13 @@ class Dropout(BO):
     @property
     def objective_name(self):
         return self.objective.objective_name
+
+    def _choose_evaluator(self):
+        self.evaluator = self._arguments_mng.evaluator_creator(
+            evaluator_type=self.evaluator_type, acquisition=self.acquisition,
+            batch_size=self.batch_size, model_type=self.model_type, model=self.model,
+            space=self.space, acquisition_optimizer=self.acquisition_optimizer
+        )
 
     def run_optimization(self, max_iter=0, max_time=np.inf,  eps=1e-8, context=None,
                          verbosity=False, save_models_parameters=True, report_file=None,
@@ -385,8 +388,20 @@ class Dropout(BO):
         self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
 
     def _compute_next_evaluations(self, pending_zipped_X=None, ignored_zipped_X=None):
+        context_manager, duplicate_manager = self._compute_setting(pending_zipped_X=pending_zipped_X, ignored_zipped_X=ignored_zipped_X)
+
+        # We zip the value in case there are categorical variables
+        suggested_ = self.subspace.zip_inputs(self.evaluator.compute_batch(
+            duplicate_manager=duplicate_manager,
+            context_manager=context_manager))
+
+        return self._fill_in_dimensions(samples=suggested_)
+
+    def _compute_setting(self, pending_zipped_X, ignored_zipped_X):
+        context_manager = ContextManager(self.subspace, self.context)
+
         # --- Update the context if any
-        self.acquisition.optimizer.context_manager = ContextManager(self.subspace, self.context)
+        self.acquisition.optimizer.context_manager = context_manager
 
         # --- Activate de_duplication
         if self.de_duplication:
@@ -396,12 +411,7 @@ class Dropout(BO):
         else:
             duplicate_manager = None
 
-        # We zip the value in case there are categorical variables
-        suggested_ = self.subspace.zip_inputs(self.evaluator.compute_batch(
-            duplicate_manager=duplicate_manager,
-            context_manager=self.acquisition.optimizer.context_manager))
-
-        return self._fill_in_dimensions(samples=suggested_)
+        return context_manager, duplicate_manager
 
     def _save(self):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)

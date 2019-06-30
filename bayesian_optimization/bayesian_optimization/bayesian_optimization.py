@@ -76,7 +76,7 @@ class BayesianOptimizer(object):
 
     def select_query_point(self, boundaries,
                            incumbent_fct=lambda y: np.max(y)):
-        """ Select the next query point in boundaries based on acq. function.
+        """ SelectObjective the next query point in boundaries based on acq. function.
 
         Parameters
         ----------
@@ -192,7 +192,7 @@ class REMBOOptimizer(BayesianOptimizer):
 
     def select_query_point(self, boundaries,
                            incumbent_fct=lambda y: np.max(y)):
-        """ Select the next query point in boundaries based on acq. function.
+        """ SelectObjective the next query point in boundaries based on acq. function.
 
         Parameters
         ----------
@@ -214,13 +214,13 @@ class REMBOOptimizer(BayesianOptimizer):
         boundaries_embedded = self._compute_boundaries_embedding(boundaries)
 
         if len(self.X_) < self.initial_random_samples:
-            # Select query point randomly
+            # SelectObjective query point randomly
             X_query_embedded = \
                 self.rng.uniform(size=boundaries_embedded.shape[0]) \
                 * (boundaries_embedded[:, 1] - boundaries_embedded[:, 0]) \
                     + boundaries_embedded[:, 0]
         else:
-            # Select query point by finding optimum of acquisition function
+            # SelectObjective query point by finding optimum of acquisition function
             # within boundaries
             def objective_function(x):
                 # Check boundaries
@@ -340,7 +340,7 @@ class REMBOOptimizer(BayesianOptimizer):
 """
 #    def select_query_point(self, boundaries,
 #                           incumbent_fct=lambda y: np.max(y)):
-""" Select the next query point in boundaries based on acq. function.
+""" SelectObjective the next query point in boundaries based on acq. function.
 
         Parameters
         ----------

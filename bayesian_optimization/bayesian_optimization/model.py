@@ -134,7 +134,7 @@ class GaussianProcessModel(object):
                 n_restarts_optimizer=self.n_restarts_optimizer,
                 normalize_y=self.normalize_y, random_state=self.random)
 
-        # Select if standard or Bayesian Gaussian process are used
+        # SelectObjective if standard or Bayesian Gaussian process are used
         if self.bayesian_gp:
             raise NotImplementedError("Bayesian GP is not yet implemented.")
 

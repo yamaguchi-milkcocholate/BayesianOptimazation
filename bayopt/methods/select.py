@@ -6,15 +6,16 @@ from bayopt.space.space import get_subspace
 from bayopt.utils.utils import mkdir_when_not_exist
 from bayopt.clock.clock import now_str
 from bayopt import definitions
+from bayopt.methods.evaluator.sequentialext import SequentialExt
 import numpy as np
 
 
-class Select(Dropout):
+class SelectBase(Dropout):
 
     def __init__(self, fill_in_strategy, f, mix=0.5, domain=None, constraints=None, cost_withGradients=None, X=None, Y=None,
                  model_type='GP', initial_design_numdata=2, initial_design_type='random', acquisition_type='LCB',
                  normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_interval=1,
-                 evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False, sample_num=2):
+                 evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False, sample_num=2, eta=None):
 
         if initial_design_numdata is not sample_num:
             raise ValueError('initial_design_numdata != sample_num')
@@ -38,12 +39,16 @@ class Select(Dropout):
         self.log_masks = list()
 
         self.sample_index = None
+        self.acq_max = None
 
         # weight function
         non_inc_f = SelectionNonIncFunc(threshold=0.25, negative_weight=True)
         w = QuantileBasedWeight(non_inc_f=non_inc_f, tie_case=True, normalization=False, min_problem=True)
 
-        self.bernoulli_igo = BernoulliIGO(d=self.dimensionality, weight_func=w)
+        self.bernoulli_igo = BernoulliIGO(d=self.dimensionality, weight_func=w, eta=eta)
+
+    def _choose_evaluator(self):
+        self.evaluator = SequentialExt(self.acquisition)
 
     def update_subspace(self):
         while True:
@@ -66,6 +71,10 @@ class Select(Dropout):
 
         self.bernoulli_igo.update(X=np.array(self.masks), evals=np.array(self.evals))
         self._clear_igo_cache()
+
+    def _clear_igo_cache(self):
+        self.masks = list()
+        self.evals = list()
 
     def sample_mask(self):
         return self.bernoulli_igo.model.sampling(lam=1)
@@ -112,14 +121,6 @@ class Select(Dropout):
 
             break
 
-    def evaluate_objective(self):
-        super().evaluate_objective()
-        self.evals.append(self.Y_new[0][0])
-
-    def _clear_igo_cache(self):
-        self.masks = list()
-        self.evals = list()
-
     def _save(self):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
 
@@ -138,3 +139,28 @@ class Select(Dropout):
 
     def save_mask(self, mask_file):
         self._write_csv(mask_file, self.log_masks)
+
+    def _compute_next_evaluations(self, pending_zipped_X=None, ignored_zipped_X=None):
+        context_manager, duplicate_manager = self._compute_setting(pending_zipped_X=pending_zipped_X,
+                                                                   ignored_zipped_X=ignored_zipped_X)
+
+        x, self.acq_max = self.evaluator.compute_batch(duplicate_manager=duplicate_manager, context_manager=context_manager)
+
+        # We zip the value in case there are categorical variables
+        suggested_ = self.subspace.zip_inputs(x)
+
+        return self._fill_in_dimensions(samples=suggested_)
+
+
+class SelectObjective(SelectBase):
+
+    def next_point(self):
+        super().next_point()
+        self.evals.append(self.Y_new[0][0])
+
+
+class SelectAcquisition(SelectBase):
+
+    def next_point(self):
+        super().next_point()
+        self.evals.append(self.acq_max[0][0])

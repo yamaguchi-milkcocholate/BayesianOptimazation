@@ -20,6 +20,22 @@ def maximum_locus(data):
 
 def minimum_locus(data):
     if len(data.shape) is not 1:
+        raise ValueError('shape (m, 0)')
+
+    data_ = list()
+    minimum = 0
+
+    for i in range(len(data)):
+        if minimum > data[i]:
+            minimum = data[i]
+
+        data_.append(minimum)
+
+    return np.array(data_)
+
+
+def minimum_locus(data):
+    if len(data.shape) is not 1:
         raise ValueError('shape (n, 0)')
 
     data_ = list()
@@ -80,19 +96,19 @@ def histogram(data, start, stop, step):
     return np.round(x[:-1], 1).astype(np.str), np.array(y)
 
 
-def pivot_table(data):
+def pivot_table(data, value, columns, index):
 
-    df = {'theta': list(), 'iteration': list(), 'dimension': list()}
+    df = {value: list(), columns: list(), index: list()}
 
     for iteration_idx in range(len(data)):
         for dim_idx in range(len(data[iteration_idx])):
 
-            df['theta'].append(data[iteration_idx][dim_idx])
-            df['iteration'].append(iteration_idx + 1)
-            df['dimension'].append(dim_idx + 1)
+            df[value].append(data[iteration_idx][dim_idx])
+            df[columns].append(iteration_idx + 1)
+            df[index].append(dim_idx + 1)
 
     df = pd.DataFrame(df)
-    df_pivot = pd.pivot_table(data=df, values='theta', columns='iteration', index='dimension', aggfunc=np.mean)
+    df_pivot = pd.pivot_table(data=df, values=value, columns=columns, index=index, aggfunc=np.mean)
     return df_pivot
 
 

@@ -1,5 +1,6 @@
-from bayopt.methods.select import Select
+from bayopt.methods.select import SelectAcquisition
 from bayopt.objective_examples.experiments import GaussianMixtureFunction
+import numpy as np
 
 domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x1', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
@@ -31,45 +32,11 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           {'name': 'x27', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x28', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           {'name': 'x29', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x30', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x31', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x32', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x33', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x34', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x35', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x36', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x37', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x38', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x39', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x40', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x41', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x42', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x43', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x44', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x45', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x46', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x47', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x48', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
-          {'name': 'x49', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           ]
 
+dim = len(domain)
+fill_in_strategy = 'mix'
+f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
 
-for i in range(4):
-
-    dim = len(domain)
-    fill_in_strategy = 'random'
-    f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-    method = Select(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True)
-    method.run_optimization(max_iter=500, eps=0)
-
-    dim = len(domain)
-    fill_in_strategy = 'copy'
-    f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-    method = Select(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True)
-    method.run_optimization(max_iter=500, eps=0)
-
-    dim = len(domain)
-    fill_in_strategy = 'mix'
-    f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-    method = Select(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True, mix=0.5)
-    method.run_optimization(max_iter=500, eps=0)
+method = SelectAcquisition(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True, mix=0.5, eta=1./np.sqrt(dim))
+method.run_optimization(max_iter=500, eps=0)

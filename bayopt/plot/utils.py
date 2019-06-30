@@ -1,10 +1,12 @@
 from bayopt.plot.loader import load_experiments
 from bayopt.plot.loader import load_experiments_theta
 from bayopt.plot.loader import load_experiments_mask
+from bayopt.plot.loader import load_experiments_model
 from bayopt.plot.staticplot import StaticPlot
 from bayopt.plot.staticplot import BarPlot
 from bayopt.plot.staticplot import HeatMap
 from bayopt.plot.stats import maximum_locus
+from bayopt.plot.stats import minimum_locus
 from bayopt.plot.stats import with_confidential
 from bayopt.plot.stats import histogram
 from bayopt.plot.stats import pivot_table
@@ -13,25 +15,30 @@ from bayopt.plot.stats import count_true
 import numpy as np
 
 
-def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None):
+def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None, maximize=True, start=None, end=None):
 
     data = dict()
 
     for fill in method:
         results = load_experiments(
             function_name=function_name,
-            start=None,
-            end=None,
+            start=start,
+            end=end,
             dim=dim,
             feature=fill,
             iter_check=iter_check
         )
-        results = results * -1
 
         results_ = list()
 
-        for i in range(len(results)):
-            results_.append(maximum_locus(results[i]))
+        if maximize:
+            results = results * -1
+
+            for i in range(len(results)):
+                results_.append(maximum_locus(results[i]))
+        else:
+            for i in range(len(results)):
+                results_.append(minimum_locus(results[i]))
 
         results_ = np.array(results_)
         results_ = results_.T
@@ -81,7 +88,7 @@ def plot_experiment_theta(function_name, dim, method, created_at, update_check=N
 
     heat_map = HeatMap()
 
-    heat_map.add_data_set(data=pivot_table(theta), space=(0, 1))
+    heat_map.add_data_set(data=pivot_table(theta, value='theta', columns='iteration', index='dimension'), space=(0, 1))
     heat_map.finish(option=function_name + '_' + dim + '_theta')
 
 
@@ -112,7 +119,7 @@ def plot_experiment_mask(function_name, dim, method, created_at, update_check=No
 
     heat_map = HeatMap()
 
-    heat_map.add_data_set(data=pivot_table(mask), space=(0, 1))
+    heat_map.add_data_set(data=pivot_table(mask, value='theta', columns='iteration', index='dimension'), space=(0, 1))
     heat_map.finish(option=function_name + '_' + dim + '_mask')
 
 
@@ -138,3 +145,18 @@ def plot_experiment_subspace_dimensionality(function_name, dim, method, created_
     plot.add_data_set(x=x, y=mask_, label='subspace dimensionality')
     plot.set_x(x=x[np.arange(0, len(x), step)], x_ticks=np.arange(0, iter_num, step * step))
     plot.finish(option=function_name + '_' + dim + 'subspace_dimensionality')
+
+
+def plot_experiment_model(function_name, dim, method, created_at, update_check=None):
+    model = load_experiments_model(
+        function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check)
+
+    model = model.drop('Iteration', axis=1)
+    model = model.drop('GP_regression.Gaussian_noise.variance', axis=1)
+    model = model.values
+
+    heat_map = HeatMap()
+
+    heat_map.add_data_set(data=pivot_table(
+        model, value='value', columns='iteration', index='parameter'), space=(0, np.median(model)))
+    heat_map.finish(option=function_name + '_' + dim + '_model')

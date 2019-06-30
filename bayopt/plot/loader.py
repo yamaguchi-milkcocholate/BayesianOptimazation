@@ -1,6 +1,7 @@
 from bayopt import definitions
 from bayopt.clock.clock import from_str
 from bayopt.utils.utils import rmdir_when_any
+import pandas as pd
 import os
 import csv
 import numpy as np
@@ -62,6 +63,23 @@ def load_experiments_mask(function_name, dim, feature, created_at, update_check=
     return data
 
 
+def load_experiments_model(function_name, dim, feature, created_at, update_check=None):
+    expt = _load_experiment(function_name=function_name, created_at=created_at, dim=dim,
+                            feature=feature)
+
+    expt_file = expt + '/model.csv'
+
+    data = pd.read_csv(expt_file, delimiter='\t', dtype=float)
+
+    if update_check:
+        if len(data) < update_check:
+            print('expect ' + str(update_check) + ' given ' + str(len(data)))
+
+            raise ValueError('Not Enough')
+
+    return data
+
+
 def _load_experiment(function_name, created_at, dim, feature):
     experiments = load_files(
         function_name=function_name, start=created_at, end=created_at, dim=dim, feature=feature)
@@ -85,7 +103,7 @@ def csv_to_numpy(file, header=True, dtype='float'):
     with open(file, 'r') as f:
         reader = csv.reader(f, delimiter="\t")
         if header:
-            next(reader)  # ヘッダーを読み飛ばしたい時
+            next(reader)
 
         for row in reader:
             y.append(row)

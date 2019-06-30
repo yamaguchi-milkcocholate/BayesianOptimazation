@@ -1,4 +1,4 @@
-from bayopt.methods.bo import BayesianOptimizationExt
+from bayopt.methods.select import SelectAcquisition
 from bayopt.objective_examples.experiments import GaussianMixtureFunction
 
 domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
@@ -33,9 +33,23 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           {'name': 'x29', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           ]
 
-for i in range(1):
+
+for i in range(3):
 
     dim = len(domain)
+    fill_in_strategy = 'random'
     f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-    method = BayesianOptimizationExt(f=f, domain=domain, maximize=True, ard=True)
-    method.run_optimization(max_iter=500)
+    method = SelectAcquisition(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True)
+    # method.run_optimization(max_iter=500, eps=0)
+
+    dim = len(domain)
+    fill_in_strategy = 'copy'
+    f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
+    method = SelectAcquisition(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True)
+    method.run_optimization(max_iter=500, eps=0)
+
+    dim = len(domain)
+    fill_in_strategy = 'mix'
+    f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
+    method = SelectAcquisition(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True, mix=0.5)
+    method.run_optimization(max_iter=500, eps=0)
