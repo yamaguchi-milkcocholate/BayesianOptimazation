@@ -416,7 +416,8 @@ class Dropout(BO):
     def _save(self):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
         
-        dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(self.dimensionality) + 'D ' + str(self.fill_in_strategy)
+        dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' '\
+                   + str(self.dimensionality) + 'D-' + str(self.subspace_dim_size) + 'D ' + str(self.fill_in_strategy)
         mkdir_when_not_exist(abs_path=dir_name)
 
         self.save_report(report_file=dir_name + '/report.txt')
