@@ -15,15 +15,15 @@ from bayopt.plot.stats import count_true
 import numpy as np
 
 
-def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None, maxmize=True):
+def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None, maximize=True, start=None, end=None):
 
     data = dict()
 
     for fill in method:
         results = load_experiments(
             function_name=function_name,
-            start=None,
-            end=None,
+            start=start,
+            end=end,
             dim=dim,
             feature=fill,
             iter_check=iter_check
@@ -31,7 +31,7 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False, 
 
         results_ = list()
 
-        if maxmize:
+        if maximize:
             results = results * -1
 
             for i in range(len(results)):

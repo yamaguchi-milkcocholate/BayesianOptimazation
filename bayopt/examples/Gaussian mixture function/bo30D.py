@@ -33,9 +33,9 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           {'name': 'x29', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
           ]
 
-for i in range(10):
+for i in range(1):
 
     dim = len(domain)
     f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-    method = BayesianOptimizationExt(f=f, domain=domain, maximize=True)
+    method = BayesianOptimizationExt(f=f, domain=domain, maximize=True, ard=True)
     method.run_optimization(max_iter=500)
