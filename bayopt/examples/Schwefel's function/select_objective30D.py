@@ -1,5 +1,6 @@
-from bayopt.methods.dropout import Dropout
+from bayopt.methods.select import SelectObjective
 from bayopt.objective_examples.experiments import SchwefelsFunction
+import numpy as np
 
 domain = [{'name': 'x0', 'type': 'continuous', 'domain': (-1, 1), 'dimensionality': 1},
           {'name': 'x1', 'type': 'continuous', 'domain': (-1, 1), 'dimensionality': 1},
@@ -36,19 +37,23 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (-1, 1), 'dimensionalit
 
 for i in range(5):
 
+    dim = len(domain)
     fill_in_strategy = 'random'
     f = SchwefelsFunction()
-    method = Dropout(f=f, domain=domain, subspace_dim_size=15, fill_in_strategy=fill_in_strategy, maximize=False)
+    method = SelectObjective(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=False,
+                             theta=5/dim, eta=1/np.sqrt(dim))
     method.run_optimization(max_iter=250, eps=0)
 
+    dim = len(domain)
     fill_in_strategy = 'copy'
     f = SchwefelsFunction()
-    method = Dropout(f=f, domain=domain, subspace_dim_size=15, fill_in_strategy=fill_in_strategy, maximize=False,
-                     )
+    method = SelectObjective(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=False,
+                             theta=5/dim, eta=1/np.sqrt(dim))
     method.run_optimization(max_iter=250, eps=0)
 
+    dim = len(domain)
     fill_in_strategy = 'mix'
     f = SchwefelsFunction()
-    method = Dropout(f=f, domain=domain, subspace_dim_size=15, fill_in_strategy=fill_in_strategy,
-                     maximize=False, mix=0.5)
+    method = SelectObjective(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=False,
+                             theta=5/dim, eta=1/np.sqrt(dim), mix=0.5)
     method.run_optimization(max_iter=250, eps=0)

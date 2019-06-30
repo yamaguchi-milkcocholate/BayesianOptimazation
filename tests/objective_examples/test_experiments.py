@@ -19,6 +19,9 @@ class TestExperiments(unittest.TestCase):
         self.assertEqual(0, f(np.zeros(30)))
         self.assertEqual(9455, f(np.ones(30)))
 
+        x = np.array([1, 2, 3, 4])
+        self.assertEqual(146, f(x))
+
 
 if __name__ == '__main__':
     unittest.main()
