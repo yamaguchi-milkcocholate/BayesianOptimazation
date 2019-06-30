@@ -113,7 +113,7 @@ class ACESOptimizer(BOCPSOptimizer):
         params[:] = self.parameters
 
     def _determine_contextparams(self, optimizer):
-        """Select context and params jointly using ACES."""
+        """SelectObjective context and params jointly using ACES."""
         # Determine optimal parameters for fixed context
         cx = optimizer.select_query_point(self.cx_boundaries)
         return cx[:self.context_dims], cx[self.context_dims:]
@@ -138,7 +138,7 @@ class SurrogateACESOptimizer(ACESOptimizer):
         super(SurrogateACESOptimizer, self).init(n_params, n_context_dims)
 
     def _determine_contextparams(self, optimizer):
-        """Select context and params jointly using ACES."""
+        """SelectObjective context and params jointly using ACES."""
         # Choose the first samples uniform randomly
         if len(optimizer.X_) < optimizer.initial_random_samples:
             cx = np.random.uniform(self.cx_boundaries[:, 0],
@@ -154,7 +154,7 @@ class SurrogateACESOptimizer(ACESOptimizer):
         X = np.empty((n_query_points, n_data_dims))
         y = np.empty(n_query_points)
         for i in range(n_query_points):
-            # Select query point and evaluation context randomly
+            # SelectObjective query point and evaluation context randomly
             query = np.random.uniform(self.cx_boundaries[:, 0],
                                       self.cx_boundaries[:, 1])
             ind = np.random.choice(self.n_context_samples)
@@ -172,7 +172,7 @@ class SurrogateACESOptimizer(ACESOptimizer):
         self.es_surrogate = GaussianProcessRegressor(kernel=kernel)
         self.es_surrogate.fit(X, y)
 
-        # Select query based on mean entropy reduction in surrogate model
+        # SelectObjective query based on mean entropy reduction in surrogate model
         # predictions
         contexts = np.random.uniform(self.context_boundaries[:, 0],
                                      self.context_boundaries[:, 1],
