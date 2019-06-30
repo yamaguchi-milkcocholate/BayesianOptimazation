@@ -52,6 +52,9 @@ class SelectBase(Dropout):
             theta = theta * np.ones(self.dimensionality)
         self.bernoulli_igo = BernoulliIGO(d=self.dimensionality, weight_func=w, eta=eta, theta=theta)
 
+        self.eta = self.bernoulli_igo.eta
+        self.theta = self.bernoulli_igo.model.theta[0]
+
     def _choose_evaluator(self):
         self.evaluator = SequentialExt(self.acquisition)
 
@@ -130,7 +133,8 @@ class SelectBase(Dropout):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
 
         dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(
-            self.dimensionality) + 'D ' + str(self.fill_in_strategy) + '_select_' + self.UPDATE_EVALUATION
+            self.dimensionality) + 'D_' + 'e' + '{:.3f}'.format(self.eta) + 't' + '{:.3f}'.format(self.theta) + ' ' \
+            + str(self.fill_in_strategy) + '_select_' + self.UPDATE_EVALUATION
         mkdir_when_not_exist(abs_path=dir_name)
 
         self.save_report(report_file=dir_name + '/report.txt')

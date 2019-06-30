@@ -49,8 +49,8 @@ for i in range(10):
     dim = len(domain)
     fill_in_strategy = 'random'
     f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
-    method = SelectObjective(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True)
-    method.run_optimization(max_iter=500, eps=0)
+    method = SelectObjective(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True, theta=5/dim)
+    method.run_optimization(max_iter=5, eps=0)
 
     dim = len(domain)
     fill_in_strategy = 'copy'
