@@ -12,6 +12,8 @@ import numpy as np
 
 class SelectBase(Dropout):
 
+    UPDATE_EVALUATION = ''
+
     def __init__(self, fill_in_strategy, f, mix=0.5, domain=None, constraints=None, cost_withGradients=None, X=None, Y=None,
                  model_type='GP', initial_design_numdata=2, initial_design_type='random', acquisition_type='LCB',
                  normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_interval=1,
@@ -125,7 +127,7 @@ class SelectBase(Dropout):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
 
         dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(
-            self.dimensionality) + 'D ' + str(self.fill_in_strategy) + '_select'
+            self.dimensionality) + 'D ' + str(self.fill_in_strategy) + '_select_' + self.UPDATE_EVALUATION
         mkdir_when_not_exist(abs_path=dir_name)
 
         self.save_report(report_file=dir_name + '/report.txt')
@@ -144,7 +146,8 @@ class SelectBase(Dropout):
         context_manager, duplicate_manager = self._compute_setting(pending_zipped_X=pending_zipped_X,
                                                                    ignored_zipped_X=ignored_zipped_X)
 
-        x, self.acq_max = self.evaluator.compute_batch(duplicate_manager=duplicate_manager, context_manager=context_manager)
+        x, self.acq_max = self.evaluator.compute_batch(
+            duplicate_manager=duplicate_manager, context_manager=context_manager)
 
         # We zip the value in case there are categorical variables
         suggested_ = self.subspace.zip_inputs(x)
@@ -154,12 +157,16 @@ class SelectBase(Dropout):
 
 class SelectObjective(SelectBase):
 
+    UPDATE_EVALUATION = 'objective'
+
     def next_point(self):
         super().next_point()
         self.evals.append(self.Y_new[0][0])
 
 
 class SelectAcquisition(SelectBase):
+
+    UPDATE_EVALUATION = 'acquisition'
 
     def next_point(self):
         super().next_point()
