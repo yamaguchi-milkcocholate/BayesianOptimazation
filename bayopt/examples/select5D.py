@@ -1,4 +1,4 @@
-from bayopt.methods.select import Select
+from bayopt.methods.select import SelectObjective
 from bayopt.objective_examples.experiments import GaussianMixtureFunction
 
 domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality': 1},
@@ -11,5 +11,5 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
 dim = len(domain)
 f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
 
-method = Select(fill_in_strategy='random', f=f, domain=domain, maximize=True)
+method = SelectObjective(fill_in_strategy='random', f=f, domain=domain, maximize=True)
 method.run_optimization(max_iter=100)
