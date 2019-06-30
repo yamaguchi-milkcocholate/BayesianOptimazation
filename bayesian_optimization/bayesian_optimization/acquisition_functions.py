@@ -358,7 +358,7 @@ class EntropySearch(AcquisitionFunction):
             self.X_candidate = \
                 np.empty((self.n_candidates, boundaries.shape[0]))
             for i in range(self.n_candidates):
-                # Select n_trial_points data points uniform randomly
+                # SelectObjective n_trial_points data points uniform randomly
                 candidates = np.random.uniform(
                     boundaries[:, 0], boundaries[:, 1],
                     (self.n_trial_points, boundaries.shape[0]))
@@ -478,7 +478,7 @@ class MinimalRegretSearch(AcquisitionFunction):
 
                 if self.point:
                     # MRS point:
-                    # Select representer point for the j-th assumed outcome 
+                    # SelectObjective representer point for the j-th assumed outcome
                     # y_i[j] as the maximum of the GP mean
                     opt_ind = f_mean_j.argmax()  # selected representer point
                     # Compute regret of selected representer point compared
@@ -531,7 +531,7 @@ class MinimalRegretSearch(AcquisitionFunction):
             self.X_candidate = \
                 np.empty((self.n_candidates, boundaries.shape[0]))
             for i in range(self.n_candidates):
-                # Select n_trial_points data points uniform randomly
+                # SelectObjective n_trial_points data points uniform randomly
                 candidates = np.random.uniform(
                     boundaries[:, 0], boundaries[:, 1],
                     (self.n_trial_points, boundaries.shape[0]))
