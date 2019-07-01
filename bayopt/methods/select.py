@@ -131,9 +131,11 @@ class SelectBase(Dropout):
 
     def _save(self):
         mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
+        eta = str('{:.3f}'.format(self.eta)).replace('.', '')
+        theta = str('{:.3f}'.format(self.theta)).replace('.', '')
 
         dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' + str(
-            self.dimensionality) + 'D_' + 'e' + '{:.3f}'.format(self.eta) + 't' + '{:.3f}'.format(self.theta) + ' ' \
+            self.dimensionality) + 'D_' + 'e' + eta + 't' + theta + ' ' \
             + str(self.fill_in_strategy) + '_select_' + self.UPDATE_EVALUATION
         mkdir_when_not_exist(abs_path=dir_name)
 
