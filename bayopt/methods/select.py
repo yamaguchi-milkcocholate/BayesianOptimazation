@@ -7,7 +7,6 @@ from bayopt.utils.utils import mkdir_when_not_exist
 from bayopt.clock.clock import now_str
 from bayopt import definitions
 from bayopt.methods.evaluator.sequentialext import SequentialExt
-from copy import deepcopy
 import numpy as np
 
 
@@ -78,11 +77,7 @@ class SelectBase(Dropout):
         if len(self.evals) is not self.sample_num:
             raise ValueError('evals are not ' + str(self.sample_num))
 
-        tmp = deepcopy(self.bernoulli_igo.model.theta)
         self.bernoulli_igo.update(X=np.array(self.masks), evals=np.array(self.evals))
-        for i in [j for j in range(self.dimensionality) if j not in self.subspace_idx]:
-            self.bernoulli_igo.model.theta[i] = tmp[i]
-
         self._clear_igo_cache()
 
     def _clear_igo_cache(self):
@@ -185,22 +180,3 @@ class SelectAcquisition(SelectBase):
     def next_point(self):
         super().next_point()
         self.evals.append(self.acq_max[0][0])
-
-
-class SelectXOR(SelectObjective):
-
-    UPDATE_EVALUATION = 'objective_XOR'
-
-    def _update_distribution(self):
-        if len(self.masks) is not self.sample_num:
-            raise ValueError('masks are not ' + str(self.sample_num))
-
-        if len(self.evals) is not self.sample_num:
-            raise ValueError('evals are not ' + str(self.sample_num))
-
-        tmp = deepcopy(self.bernoulli_igo.model.theta)
-        self.bernoulli_igo.update(X=np.array(self.masks), evals=np.array(self.evals))
-        for i in [j for j in range(self.dimensionality) if j not in self.subspace_idx]:
-            self.bernoulli_igo.model.theta[i] = tmp[i]
-
-        self._clear_igo_cache()
