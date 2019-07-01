@@ -17,57 +17,72 @@ import numpy as np
 
 
 def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None,
-                     maximize=True, start=None, end=None):
+                     maximize=True, start=None, end=None, iteration=None):
+
+    if isinstance(dim, str):
+        dim = [dim]
 
     data = dict()
 
     for fill in method:
-        results = load_experiments(
-            function_name=function_name,
-            start=start,
-            end=end,
-            dim=dim,
-            feature=fill,
-            iter_check=iter_check
-        )
+        for d in dim:
 
-        results_ = list()
+            results = load_experiments(
+                function_name=function_name,
+                start=start,
+                end=end,
+                dim=d,
+                feature=fill,
+                iter_check=iter_check
+            )
 
-        if maximize:
-            results = results * -1
+            if len(results) == 0:
+                continue
 
-            for i in range(len(results)):
-                results_.append(maximum_locus(results[i]))
-        else:
-            for i in range(len(results)):
-                results_.append(minimum_locus(results[i]))
+            results_ = list()
 
-        results_ = np.array(results_)
-        results_ = results_.T
+            if maximize:
+                results = results * -1
 
-        results_ = with_confidential(results_)
+                for i in range(len(results)):
+                    locus = maximum_locus(results[i])
+                    if iteration:
+                        locus = locus[:iteration]
+                    results_.append(locus)
+            else:
+                for i in range(len(results)):
+                    locus = minimum_locus(results[i])
+                    if iteration:
+                        locus = locus[:iteration]
+                    results_.append(locus)
 
-        x_axis = np.arange(0, len(results_))
+            results_ = np.array(results_)
+            results_ = results_.T
 
-        if is_median:
-            median = results_['median']
-            upper = results_['upper']
-            lower = results_['lower']
+            results_ = with_confidential(results_)
 
-            data[fill] = {'x_axis': x_axis, 'prediction': median, 'upper': upper, 'lower': lower}
-        else:
-            mean = results_['mean'].values
-            std = results_['std'].values
+            x_axis = np.arange(0, len(results_))
 
-            data[fill] = {'x_axis': x_axis, 'prediction': mean, 'upper': mean + std, 'lower': mean - std}
+            if is_median:
+                median = results_['median']
+                upper = results_['upper']
+                lower = results_['lower']
 
-        if single:
-            plot = StaticPlot()
-            plot.add_data_set(x=x_axis, y=data[fill]['prediction'])
-            plot.add_confidential_area(
-                x=x_axis, upper_confidential_bound=data[fill]['upper'], lower_confidential_bound=data[fill]['lower'])
-            plot.set_y(low_lim=-0.2, high_lim=1.2)
-            plot.finish(option=function_name + '_' + fill)
+                data[fill + d] = {'x_axis': x_axis, 'prediction': median, 'upper': upper, 'lower': lower}
+            else:
+                mean = results_['mean'].values
+                std = results_['std'].values
+
+                data[fill + d] = {'x_axis': x_axis, 'prediction': mean, 'upper': mean + std, 'lower': mean - std}
+
+            if single:
+                plot = StaticPlot()
+                plot.add_data_set(x=x_axis, y=data[fill + d]['prediction'])
+                plot.add_confidential_area(
+                    x=x_axis, upper_confidential_bound=data[fill + d]['upper'],
+                    lower_confidential_bound=data[fill + d]['lower'])
+                plot.set_y(low_lim=-0.2, high_lim=1.2)
+                plot.finish(option=function_name + '_' + fill + d)
 
     plot_all = StaticPlot()
 
@@ -78,9 +93,9 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False, 
 
     plot_all.set_y(low_lim=-0.2, high_lim=1.2)
     if is_median:
-        plot_all.finish(option=function_name + '_' + dim + '_median')
+        plot_all.finish(option=function_name + '_' + '_median')
     else:
-        plot_all.finish(option=function_name + '_' + dim + '_mean')
+        plot_all.finish(option=function_name + '_' + '_mean')
 
 
 def plot_experiment_evaluation(function_name, dim, method, created_at, update_check=None, maximize=True):

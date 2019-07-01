@@ -31,7 +31,7 @@ class StaticPlot(Plot):
         if low_lim is not None and high_lim is not None:
             self._plt.ylim(low_lim, high_lim)
 
-        self._plt.legend(loc='upper left')
+        self._plt.legend(loc='upper left', borderaxespad=0, fontsize=7)
 
 
 class BarPlot(StaticPlot):
