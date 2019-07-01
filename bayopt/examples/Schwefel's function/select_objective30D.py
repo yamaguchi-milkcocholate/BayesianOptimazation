@@ -41,19 +41,19 @@ for i in range(5):
     fill_in_strategy = 'random'
     f = SchwefelsFunction()
     method = SelectObjective(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=False,
-                             theta=5/dim, eta=1/np.sqrt(dim))
+                             theta=15/dim, eta=1/np.sqrt(dim))
     method.run_optimization(max_iter=250, eps=0)
 
     dim = len(domain)
     fill_in_strategy = 'copy'
     f = SchwefelsFunction()
     method = SelectObjective(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=False,
-                             theta=5/dim, eta=1/np.sqrt(dim))
+                             theta=15/dim, eta=1/np.sqrt(dim))
     method.run_optimization(max_iter=250, eps=0)
 
     dim = len(domain)
     fill_in_strategy = 'mix'
     f = SchwefelsFunction()
     method = SelectObjective(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=False,
-                             theta=5/dim, eta=1/np.sqrt(dim), mix=0.5)
+                             theta=15/dim, eta=1/np.sqrt(dim), mix=0.5)
     method.run_optimization(max_iter=250, eps=0)
