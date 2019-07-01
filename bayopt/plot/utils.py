@@ -164,9 +164,15 @@ def plot_experiment_subspace_dimensionality(function_name, dim, method, created_
     iter_num = len(mask)
 
     # 1 step: ~100
+    if len(mask) >= 100:
+        y = mask[0:100]
+        x = np.arange(0, 100)
+    else:
+        y = mask
+        x = np.arange(0, len(mask))
+
     plot = BarPlot()
-    x = np.arange(0, 100)
-    plot.add_data_set(x=x, y=count_true(mask[0:100]), label='subspace dimensionality by 100')
+    plot.add_data_set(x=x, y=count_true(y), label='subspace dimensionality by 100')
     plot.finish(option=function_name + '_' + dim + 'subspace_dimensionality_by_100')
 
     # 5 step
