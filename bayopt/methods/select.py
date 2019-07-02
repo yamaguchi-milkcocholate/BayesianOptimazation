@@ -20,12 +20,6 @@ class SelectBase(Dropout):
                  evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False,
                  sample_num=2, eta=None, theta=None):
 
-        if initial_design_numdata is not sample_num:
-            raise ValueError('initial_design_numdata != sample_num')
-
-        if model_update_interval is not 1:
-            raise ValueError('model_update_interval != 1')
-
         super().__init__(fill_in_strategy=fill_in_strategy, f=f, mix=mix, domain=domain, constraints=constraints,
                          cost_withGradients=cost_withGradients, X=X, Y=Y, subspace_dim_size=None, model_type=model_type,
                          initial_design_numdata=initial_design_numdata, initial_design_type=initial_design_type,
@@ -35,6 +29,9 @@ class SelectBase(Dropout):
                          batch_size=batch_size, maximize=maximize, de_duplication=de_duplication)
 
         self.sample_num = sample_num
+
+        self._setting_check()
+
         self.bernoulli_theta = list()
         self.masks = list()
         self.evals = list()
@@ -163,6 +160,13 @@ class SelectBase(Dropout):
 
         return self._fill_in_dimensions(samples=suggested_)
 
+    def _setting_check(self):
+        if self.model_update_interval is not 1:
+            raise ValueError('model_update_interval != 1')
+
+        if self.initial_design_numdata is not self.sample_num:
+            raise ValueError('initial_design_numdata != sample_num')
+
 
 class SelectObjective(SelectBase):
 
@@ -180,3 +184,131 @@ class SelectAcquisition(SelectBase):
     def next_point(self):
         super().next_point()
         self.evals.append(self.acq_max[0][0])
+
+
+class SelectObjectiveDiff(SelectObjective):
+
+    UPDATE_EVALUATION = 'objective_diff'
+
+    def _setting_check(self):
+        super()._setting_check()
+
+        if self.sample_num != 2:
+            raise ValueError('sample_num must be 2')
+
+    def _update_distribution(self):
+        if len(self.masks) is not self.sample_num:
+            raise ValueError('masks are not ' + str(self.sample_num))
+
+        if len(self.evals) is not self.sample_num:
+            raise ValueError('evals are not ' + str(self.sample_num))
+
+        diff1, diff2 = self.eval_diff()
+
+        self.bernoulli_igo.update(X=np.array(self.masks), evals=np.array([1/diff1, 1/diff2]))
+        self._clear_igo_cache()
+
+    def _get_query_points(self):
+        return self.X[-2], self.X[-1]
+
+    def eval_diff(self):
+        x1, x2 = self._get_query_points()
+        f1, f2 = self.evals[0], self.evals[1]
+        m1, m2 = self.masks[0], self.masks[1]
+
+        var1, var2 = self.get_cmp_query_point(x1, m1, x2, m2), self.get_cmp_query_point(x2, m2, x1, m1)
+
+        cmp1 = self._evaluate_objective(query=np.array([var1]))
+        cmp2 = self._evaluate_objective(query=np.array([var2]))
+
+        return np.abs(f1 - cmp1), np.abs(f2 - cmp2)
+
+    @staticmethod
+    def get_cmp_query_point(query, mask, opp_query, opp_mask):
+        new = list()
+        var_mask = np.logical_not(np.logical_and(np.logical_not(mask), opp_mask))
+
+        for i in range(len(var_mask)):
+
+            if var_mask[i]:
+                new.append(opp_query[i])
+
+            else:
+                new.append(query[i])
+
+        return np.array(new)
+
+    def _evaluate_objective(self, query):
+        y_new, cost_new = self.objective.evaluate(query)
+        self.cost.update_cost_model(query, cost_new)
+
+        self.X = np.vstack((self.X, query))
+        self.Y = np.vstack((self.Y, y_new))
+
+        self.num_acquisitions += 1
+
+        return y_new[0][0]
+
+
+class SelectAcquisitionDiff(SelectAcquisition):
+
+    UPDATE_EVALUATION = 'objective_diff'
+
+    def _setting_check(self):
+        super()._setting_check()
+
+        if self.sample_num != 2:
+            raise ValueError('sample_num must be 2')
+
+    def _update_distribution(self):
+        if len(self.masks) is not self.sample_num:
+            raise ValueError('masks are not ' + str(self.sample_num))
+
+        if len(self.evals) is not self.sample_num:
+            raise ValueError('evals are not ' + str(self.sample_num))
+
+        diff1, diff2 = self.eval_diff()
+
+        self.bernoulli_igo.update(X=np.array(self.masks), evals=np.array([1 / diff1, 1 / diff2]))
+        self._clear_igo_cache()
+
+    def _get_query_points(self):
+        return self.X[-2], self.X[-1]
+
+    def eval_diff(self):
+        x1, x2 = self._get_query_points()
+        f1, f2 = self.evals[0], self.evals[1]
+        m1, m2 = self.masks[0], self.masks[1]
+
+        var1, var2 = self.get_cmp_query_point(x1, m1, x2, m2), self.get_cmp_query_point(x2, m2, x1, m1)
+
+        cmp1 = self._evaluate_objective(query=np.array([var1]))
+        cmp2 = self._evaluate_objective(query=np.array([var2]))
+
+        return np.abs(f1 - cmp1), np.abs(f2 - cmp2)
+
+    @staticmethod
+    def get_cmp_query_point(query, mask, opp_query, opp_mask):
+        new = list()
+        var_mask = np.logical_not(np.logical_and(np.logical_not(mask), opp_mask))
+
+        for i in range(len(var_mask)):
+
+            if var_mask[i]:
+                new.append(opp_query[i])
+
+            else:
+                new.append(query[i])
+
+        return np.array(new)
+
+    def _evaluate_objective(self, query):
+        y_new, cost_new = self.objective.evaluate(query)
+        self.cost.update_cost_model(query, cost_new)
+
+        self.X = np.vstack((self.X, query))
+        self.Y = np.vstack((self.Y, y_new))
+
+        self.num_acquisitions += 1
+
+        return y_new[0][0]

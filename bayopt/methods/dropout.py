@@ -88,7 +88,7 @@ class Dropout(BO):
         self.models_file = None
         self.eps = None
         self.save_models_parameters = None
-        # --- unnecessary property
+
         self.suggested_sample = None
         self.Y_new = None
 
