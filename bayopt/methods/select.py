@@ -35,6 +35,7 @@ class SelectBase(Dropout):
         self.bernoulli_theta = list()
         self.masks = list()
         self.evals = list()
+        self.acquisition_function = list()
 
         self.log_masks = list()
 
@@ -60,7 +61,7 @@ class SelectBase(Dropout):
             mask = self.sample_mask()[0]
             self.subspace_idx = np.array(np.where(mask == True)[0])
 
-            if len(self.subspace_idx) is not 0:
+            if len(self.subspace_idx) > 0:
                 self.masks.append(mask)
                 self.log_masks.append(mask)
                 break
@@ -80,6 +81,7 @@ class SelectBase(Dropout):
     def _clear_igo_cache(self):
         self.masks = list()
         self.evals = list()
+        self.acquisition_function = list()
 
     def sample_mask(self):
         return self.bernoulli_igo.model.sampling(lam=1)
@@ -101,7 +103,6 @@ class SelectBase(Dropout):
 
             for i in range(self.sample_num):
                 self.sample_index = i
-                print('.')
 
                 # --- update model
                 try:
@@ -117,6 +118,7 @@ class SelectBase(Dropout):
                 self.next_point()
 
                 # --- Update current evaluation time and function evaluations
+                print('.')
                 self.num_acquisitions += 1
 
             else:
@@ -196,32 +198,8 @@ class SelectObjectiveDiff(SelectObjective):
         if self.sample_num != 2:
             raise ValueError('sample_num must be 2')
 
-    def _update_distribution(self):
-        if len(self.masks) is not self.sample_num:
-            raise ValueError('masks are not ' + str(self.sample_num))
-
-        if len(self.evals) is not self.sample_num:
-            raise ValueError('evals are not ' + str(self.sample_num))
-
-        diff1, diff2 = self.eval_diff()
-
-        self.bernoulli_igo.update(X=np.array(self.masks), evals=np.array([1/diff1, 1/diff2]))
-        self._clear_igo_cache()
-
     def _get_query_points(self):
         return self.X[-2], self.X[-1]
-
-    def eval_diff(self):
-        x1, x2 = self._get_query_points()
-        f1, f2 = self.evals[0], self.evals[1]
-        m1, m2 = self.masks[0], self.masks[1]
-
-        var1, var2 = self.get_cmp_query_point(x1, m1, x2, m2), self.get_cmp_query_point(x2, m2, x1, m1)
-
-        cmp1 = self._evaluate_objective(query=np.array([var1]))
-        cmp2 = self._evaluate_objective(query=np.array([var2]))
-
-        return np.abs(f1 - cmp1), np.abs(f2 - cmp2)
 
     @staticmethod
     def get_cmp_query_point(query, mask, opp_query, opp_mask):
@@ -238,6 +216,30 @@ class SelectObjectiveDiff(SelectObjective):
 
         return np.array(new)
 
+    def _update_distribution(self):
+        if len(self.masks) is not self.sample_num:
+            raise ValueError('masks are not ' + str(self.sample_num))
+
+        if len(self.evals) is not self.sample_num:
+            raise ValueError('evals are not ' + str(self.sample_num))
+
+        diff1, diff2 = self.eval_diff()
+
+        self.bernoulli_igo.update(X=np.array(self.masks), evals=np.array([1/diff1, 1/diff2]))
+        self._clear_igo_cache()
+
+    def eval_diff(self):
+        x1, x2 = self._get_query_points()
+        eval1, eval2 = self.evals[0], self.evals[1]
+        m1, m2 = self.masks[0], self.masks[1]
+
+        var1, var2 = self.get_cmp_query_point(x1, m1, x2, m2), self.get_cmp_query_point(x2, m2, x1, m1)
+
+        cmp1 = self._evaluate_objective(query=np.array([var1]))
+        cmp2 = self._evaluate_objective(query=np.array([var2]))
+
+        return np.abs(eval1 - cmp1), np.abs(eval2 - cmp2)
+
     def _evaluate_objective(self, query):
         y_new, cost_new = self.objective.evaluate(query)
         self.cost.update_cost_model(query, cost_new)
@@ -245,6 +247,7 @@ class SelectObjectiveDiff(SelectObjective):
         self.X = np.vstack((self.X, query))
         self.Y = np.vstack((self.Y, y_new))
 
+        print('.')
         self.num_acquisitions += 1
 
         return y_new[0][0]
@@ -252,7 +255,11 @@ class SelectObjectiveDiff(SelectObjective):
 
 class SelectAcquisitionDiff(SelectAcquisition):
 
-    UPDATE_EVALUATION = 'objective_diff'
+    UPDATE_EVALUATION = 'acquisition_diff'
+
+    def next_point(self):
+        super().next_point()
+        self.acquisition_function.append(self.acquisition.acquisition_function)
 
     def _setting_check(self):
         super()._setting_check()
@@ -275,40 +282,41 @@ class SelectAcquisitionDiff(SelectAcquisition):
     def _get_query_points(self):
         return self.X[-2], self.X[-1]
 
-    def eval_diff(self):
-        x1, x2 = self._get_query_points()
-        f1, f2 = self.evals[0], self.evals[1]
-        m1, m2 = self.masks[0], self.masks[1]
-
-        var1, var2 = self.get_cmp_query_point(x1, m1, x2, m2), self.get_cmp_query_point(x2, m2, x1, m1)
-
-        cmp1 = self._evaluate_objective(query=np.array([var1]))
-        cmp2 = self._evaluate_objective(query=np.array([var2]))
-
-        return np.abs(f1 - cmp1), np.abs(f2 - cmp2)
-
     @staticmethod
-    def get_cmp_query_point(query, mask, opp_query, opp_mask):
+    def get_cmp_query_point(query, best, mask, opp_mask):
         new = list()
-        var_mask = np.logical_not(np.logical_and(np.logical_not(mask), opp_mask))
 
-        for i in range(len(var_mask)):
+        and_ = np.logical_and(mask, opp_mask)
+        swc_ = np.logical_and(mask, np.logical_not(opp_mask))
 
-            if var_mask[i]:
-                new.append(opp_query[i])
+        for i in range(len(query)):
 
-            else:
+            if and_[i]:
                 new.append(query[i])
+
+            elif swc_[i]:
+                new.append(best[i])
+
+        if np.count_nonzero(mask) != len(new):
+            raise ValueError()
 
         return np.array(new)
 
-    def _evaluate_objective(self, query):
-        y_new, cost_new = self.objective.evaluate(query)
-        self.cost.update_cost_model(query, cost_new)
+    def eval_diff(self):
+        x1, x2 = self._get_query_points()
+        eval1, eval2 = self.evals[0], self.evals[1]
+        m1, m2 = self.masks[0], self.masks[1]
+        best, _ = self.get_best_point()
 
-        self.X = np.vstack((self.X, query))
-        self.Y = np.vstack((self.Y, y_new))
+        var1, var2 = self.get_cmp_query_point(x1, best, m1, m2), self.get_cmp_query_point(x2, best, m2, m1)
 
-        self.num_acquisitions += 1
+        cmp1 = self._evaluate_acquisition(query=np.array([var1]), acquisition_function=self.acquisition_function[0])
+        cmp2 = self._evaluate_acquisition(query=np.array([var2]), acquisition_function=self.acquisition_function[1])
 
-        return y_new[0][0]
+        return np.abs(eval1 - cmp1), np.abs(eval2 - cmp2)
+
+    @staticmethod
+    def _evaluate_acquisition(query, acquisition_function):
+        y = acquisition_function(query)
+
+        return y[0][0]
