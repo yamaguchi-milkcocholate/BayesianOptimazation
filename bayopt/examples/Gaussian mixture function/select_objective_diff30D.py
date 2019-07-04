@@ -50,11 +50,11 @@ for i in range(1):
     f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
     method = SelectObjectiveDiff(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True,
                                  theta=15/dim, eta=1/dim)
-    method.run_optimization(max_iter=500, eps=0)
+    #method.run_optimization(max_iter=500, eps=0)
 
     dim = len(domain)
     fill_in_strategy = 'mix'
     f = GaussianMixtureFunction(dim=dim, mean_1=2, mean_2=3)
     method = SelectObjectiveDiff(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=True,
                                  theta=15/dim, eta=1/dim, mix=0.5)
-    method.run_optimization(max_iter=500, eps=0)
+    method.run_optimization(max_iter=100, eps=0)

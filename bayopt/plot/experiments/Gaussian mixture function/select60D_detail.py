@@ -7,9 +7,9 @@ from bayopt.plot.utils import plot_experiment_evaluation
 
 
 function_name = 'Gaussian mixture function'
-dim = '30D_e0033t0500'
+dim = '60D_e0017t0500'
 method = 'copy_select_acquisition_diff'
-created_at = '2019-07-03 00:58:36'
+created_at = '2019-07-03 00:05:16'
 
 
 plot_experiment_theta(
