@@ -17,7 +17,7 @@ import numpy as np
 
 
 def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None,
-                     maximize=True, start=None, end=None, iteration=None):
+                     maximize=True, start=None, end=None, iteration=None, dirname=None):
 
     if isinstance(dim, str):
         dim = [dim]
@@ -33,7 +33,8 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False, 
                 end=end,
                 dim=d,
                 feature=fill,
-                iter_check=iter_check
+                iter_check=iter_check,
+                dirname=dirname
             )
 
             if len(results) == 0:
