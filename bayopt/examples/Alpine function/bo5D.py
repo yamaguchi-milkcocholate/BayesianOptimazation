@@ -11,4 +11,4 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (-10, 10), 'dimensional
 dim = len(domain)
 f = AlpineFunction(dimensionality=dim)
 method = BayesianOptimizationExt(f=f, domain=domain, maximize=False, ard=False)
-method.run_optimization(max_iter=500)
+method.run_optimization(max_iter=100)

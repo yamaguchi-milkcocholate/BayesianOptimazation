@@ -3,6 +3,7 @@ import numpy as np
 from bayopt.objective_examples.experiments import GaussianMixtureFunction
 from bayopt.objective_examples.experiments import SchwefelsFunction
 from bayopt.objective_examples.experiments import AlpineFunction
+from bayopt.objective_examples.experiments import RosenbrockFunction
 
 
 class TestExperiments(unittest.TestCase):
@@ -37,6 +38,14 @@ class TestExperiments(unittest.TestCase):
         self.assertAlmostEqual(1.1, f(x))
         x = np.array([0, 0, 0])
         self.assertEqual(0, f(x))
+
+    def test_brosenrock_function(self):
+        x = np.array([1, 2])
+        f = RosenbrockFunction()
+        self.assertEqual(0, f.sub_func(1, 1))
+        self.assertEqual(100, f.sub_func(1, 2))
+
+        self.assertEqual(100, f(x))
 
 
 if __name__ == '__main__':
