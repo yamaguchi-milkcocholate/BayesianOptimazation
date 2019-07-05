@@ -50,3 +50,25 @@ class BraininFunction:
 
     def get_function_name(self):
         return self.function_name
+
+
+class AlpineFunction:
+
+    function_name = 'Alpine function'
+
+    def __init__(self, dimensionality, dropout=None):
+        def separable(xi): return np.abs(xi * np.sign(xi) + 0.1 * xi)
+        self.separable = separable
+
+        if isinstance(dropout, list):
+            self.active_dimension = [i for i in range(dimensionality) if i not in dropout]
+        elif dropout is None:
+            self.active_dimension = [i for i in range(dimensionality)]
+        else:
+            raise ValueError()
+
+    def __call__(self, x):
+        return np.sum([self.separable(xi=x[i]) for i in range(len(x)) if i in self.active_dimension])
+
+    def get_function_name(self):
+        return self.function_name

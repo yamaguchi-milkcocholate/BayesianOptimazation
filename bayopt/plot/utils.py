@@ -16,13 +16,15 @@ from bayopt.plot.stats import count_true
 import numpy as np
 
 
-def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None,
-                     maximize=True, start=None, end=None, iteration=None):
+def plot_experiments(function_name, dim, method, is_median=False, iter_check=None,
+                     maximize=True, start=None, end=None, iteration=None, high=None, low=None):
 
     if isinstance(dim, str):
         dim = [dim]
 
     data = dict()
+    max_high = list()
+    min_low = list()
 
     for fill in method:
         for d in dim:
@@ -64,25 +66,20 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False, 
             x_axis = np.arange(0, len(results_))
 
             if is_median:
-                median = results_['median']
+                prediction = results_['median']
                 upper = results_['upper']
                 lower = results_['lower']
 
-                data[fill + d] = {'x_axis': x_axis, 'prediction': median, 'upper': upper, 'lower': lower}
             else:
                 mean = results_['mean'].values
                 std = results_['std'].values
+                prediction = mean
+                upper = mean + std
+                lower = mean - std
 
-                data[fill + d] = {'x_axis': x_axis, 'prediction': mean, 'upper': mean + std, 'lower': mean - std}
-
-            if single:
-                plot = StaticPlot()
-                plot.add_data_set(x=x_axis, y=data[fill + d]['prediction'])
-                plot.add_confidential_area(
-                    x=x_axis, upper_confidential_bound=data[fill + d]['upper'],
-                    lower_confidential_bound=data[fill + d]['lower'])
-                plot.set_y(low_lim=-0.2, high_lim=1.2)
-                plot.finish(option=function_name + '_' + fill + d)
+            data[fill + d] = {'x_axis': x_axis, 'prediction': prediction, 'upper': upper, 'lower': lower}
+            max_high.append(np.max(upper))
+            min_low.append(np.min(lower))
 
     plot_all = StaticPlot()
 
@@ -91,14 +88,20 @@ def plot_experiments(function_name, dim, method, is_median=False, single=False, 
         plot_all.add_confidential_area(x=data_['x_axis'],
                                        upper_confidential_bound=data_['upper'], lower_confidential_bound=data_['lower'])
 
-    plot_all.set_y(low_lim=-0.2, high_lim=1.2)
+    if high is None:
+        high = np.max(max_high)
+
+    if low is None:
+        low = np.min(min_low)
+
+    plot_all.set_y(low_lim=low - 0.2, high_lim=high + 0.2)
     if is_median:
         plot_all.finish(option=function_name + '_' + '_median')
     else:
         plot_all.finish(option=function_name + '_' + '_mean')
 
 
-def plot_experiment_evaluation(function_name, dim, method, created_at, update_check=None, maximize=True):
+def plot_experiment_evaluation(function_name, dim, method, created_at, update_check=None, maximize=True, high=None, low=None):
     evaluation = load_experiments_evaluation(
         function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
     )
@@ -108,9 +111,15 @@ def plot_experiment_evaluation(function_name, dim, method, created_at, update_ch
 
     x_axis = np.arange(0, len(evaluation))
 
+    if high is None:
+        high = np.max(evaluation)
+
+    if low is None:
+        low = np.min(evaluation)
+
     plot = StaticPlot()
     plot.add_data_set(x=x_axis, y=evaluation, label=method)
-    plot.set_y(low_lim=-0.2, high_lim=1.2)
+    plot.set_y(low_lim=low - 0.2, high_lim=high + 0.2)
     plot.finish(option=function_name + '_' + method)
 
 
