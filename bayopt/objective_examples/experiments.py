@@ -55,7 +55,7 @@ class BraininFunction:
 class TestFunctionBase:
     FUNCTION_NAME = 'Test Function Base'
 
-    def __init__(self, dimensionality):
+    def __init__(self, dimensionality, **kwargs):
         self.dimensionality = dimensionality
 
     def to_vector(self, x):
@@ -115,8 +115,18 @@ class MichalewiczFunction(TestFunctionBase):
 
     FUNCTION_NAME = 'Michalewicz function'
 
-    def __init__(self, dimensionality, m=10):
+    def __init__(self, dimensionality, **kwargs):
         super().__init__(dimensionality=dimensionality)
+
+        if 'm' in kwargs.keys():
+            m = kwargs['m']
+        else:
+            m = 10
+
+        if 'dropout' in kwargs.keys():
+            self.active_dimension = kwargs['dropout']
+        else:
+            self.active_dimension = [i for i in range(self.dimensionality)]
 
         def sub_func(xi, i): return np.sin(xi) * (np.sin(i * xi * xi / np.pi) ** (2 * m))
         self.sub_func = sub_func
