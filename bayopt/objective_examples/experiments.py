@@ -52,14 +52,35 @@ class BraininFunction:
         return self.function_name
 
 
-class AlpineFunction:
+class TestFunctionBase:
+    FUNCTION_NAME = 'Test Function Base'
 
-    function_name = 'Alpine function'
+    def __init__(self, dimensionality):
+        self.dimensionality = dimensionality
+
+    def to_vector(self, x):
+        if x.shape[0] is 1 and x.shape[1] is self.dimensionality:
+            x = x[0]
+        elif x.shape[0] is self.dimensionality:
+            x = x
+        else:
+            raise ValueError()
+
+        return x
+
+    def get_function_name(self):
+        return self.FUNCTION_NAME
+
+
+class AlpineFunction(TestFunctionBase):
+
+    FUNCTION_NAME = 'Alpine function'
 
     def __init__(self, dimensionality, dropout=None):
+        super().__init__(dimensionality=dimensionality)
+
         def separable(xi): return np.abs(xi * np.sin(xi) + 0.1 * xi)
         self.separable = separable
-        self.dimensionality = dimensionality
 
         if isinstance(dropout, list):
             self.active_dimension = [i for i in range(dimensionality) if i not in dropout]
@@ -69,59 +90,38 @@ class AlpineFunction:
             raise ValueError()
 
     def __call__(self, x):
-        if x.shape[0] is 1 and x.shape[1] is self.dimensionality:
-            x = x[0]
-        elif x.shape[0] is self.dimensionality:
-            x = x
-        else:
-            raise ValueError()
+        x = self.to_vector(x=x)
+
         return np.sum([self.separable(xi=x[i]) for i in range(len(x)) if i in self.active_dimension])
 
-    def get_function_name(self):
-        return self.function_name
 
+class RosenbrockFunction(TestFunctionBase):
 
-class RosenbrockFunction:
-
-    function_name = 'Rosenbrock function'
+    FUNCTION_NAME = 'Rosenbrock function'
 
     def __init__(self, dimensionality):
+        super().__init__(dimensionality=dimensionality)
+
         def sub_func(xi, xj): return 100 * (xj - xi * xi) * (xj - xi * xi) + (xi - 1) * (xi - 1)
         self.sub_func = sub_func
-        self.dimensionality = dimensionality
 
     def __call__(self, x):
-        if x.shape[0] is 1 and x.shape[1] is self.dimensionality:
-            x = x[0]
-        elif x.shape[0] is self.dimensionality:
-            x = x
-        else:
-            raise ValueError()
+        x = self.to_vector(x=x)
 
         return np.sum([self.sub_func(x[i], x[i + 1]) for i in range(len(x) - 1)])
 
-    def get_function_name(self):
-        return self.function_name
 
+class MichalewiczFunction(TestFunctionBase):
 
-class MichalewiczFunction:
-
-    function_name = 'Michalewicz function'
+    FUNCTION_NAME = 'Michalewicz function'
 
     def __init__(self, dimensionality, m=10):
+        super().__init__(dimensionality=dimensionality)
+
         def sub_func(xi, i): return np.sin(xi) * (np.sin(i * xi * xi / np.pi) ** (2 * m))
         self.sub_func = sub_func
-        self.dimensionality = dimensionality
 
     def __call__(self, x):
-        if x.shape[0] is 1 and x.shape[1] is self.dimensionality:
-            x = x[0]
-        elif x.shape[0] is self.dimensionality:
-            x = x
-        else:
-            raise ValueError()
+        x = self.to_vector(x=x)
 
         return -1 * np.sum([self.sub_func(x[i], i + 1) for i in range(len(x))])
-
-    def get_function_name(self):
-        return self.function_name

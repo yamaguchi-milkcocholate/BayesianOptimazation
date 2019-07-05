@@ -13,6 +13,7 @@ def load_experiments(function_name, dim, feature, start=None, end=None, iter_che
 
     results = list()
     for expt in experiments:
+        print(expt)
         evaluation_file = expt + '/evaluation.csv'
         y = csv_to_numpy(file=evaluation_file)
         y = y[:, 1]
@@ -145,7 +146,6 @@ def load_files(function_name, start=None, end=None, dirname=None, **kwargs):
     else:
         storage_dir = definitions.ROOT_DIR + '/storage/' + function_name
 
-    print(storage_dir)
     experiments = os.listdir(storage_dir)
 
     masked = list()
