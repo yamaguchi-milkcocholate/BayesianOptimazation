@@ -51,8 +51,25 @@ def load_experiments_theta(function_name, dim, feature, created_at, update_check
     expt = _load_experiment(function_name=function_name, created_at=created_at, dim=dim,
                             feature=feature)
 
+    return load_theta_data(expt, update_check)
+
+
+def load_theta_data(expt, update_check):
     expt_file = expt + '/distribution.csv'
     data = csv_to_numpy(expt_file, header=False)
+
+    if update_check:
+        if len(data) < update_check:
+            print('expect ' + str(update_check) + ' given ' + str(len(data)))
+
+            raise ValueError('Not Enough')
+
+    return data
+
+
+def load_mask_data(expt, update_check):
+    expt_file = expt + '/mask.csv'
+    data = csv_to_numpy(expt_file, header=False, dtype='str')
 
     if update_check:
         if len(data) < update_check:
@@ -67,16 +84,7 @@ def load_experiments_mask(function_name, dim, feature, created_at, update_check=
     expt = _load_experiment(function_name=function_name, created_at=created_at, dim=dim,
                             feature=feature)
 
-    expt_file = expt + '/mask.csv'
-    data = csv_to_numpy(expt_file, header=False, dtype='str')
-
-    if update_check:
-        if len(data) < update_check:
-            print('expect ' + str(update_check) + ' given ' + str(len(data)))
-
-            raise ValueError('Not Enough')
-
-    return data
+    return load_mask_data(expt, update_check)
 
 
 def load_experiments_model(function_name, dim, feature, created_at, update_check=None):
@@ -132,7 +140,6 @@ def csv_to_numpy(file, header=True, dtype='float'):
 
 
 def load_files(function_name, start=None, end=None, dirname=None, **kwargs):
-    print(dirname)
     if dirname:
         storage_dir = definitions.ROOT_DIR + '/storage/' + function_name + '/' + dirname
     else:

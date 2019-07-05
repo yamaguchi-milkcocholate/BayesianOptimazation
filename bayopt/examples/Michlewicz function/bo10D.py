@@ -19,4 +19,4 @@ for i in range(1):
     dim = len(domain)
     f = MichalewiczFunction(dimensionality=dim)
     method = BayesianOptimizationExt(f=f, domain=domain, maximize=False, ard=False)
-    method.run_optimization(max_iter=100)
+    method.run_optimization(max_iter=500)

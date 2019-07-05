@@ -3,6 +3,9 @@ from bayopt.plot.loader import load_experiments_theta
 from bayopt.plot.loader import load_experiments_mask
 from bayopt.plot.loader import load_experiments_model
 from bayopt.plot.loader import load_experiments_evaluation
+from bayopt.plot.loader import load_files
+from bayopt.plot.loader import load_theta_data
+from bayopt.plot.loader import load_mask_data
 from bayopt.plot.staticplot import StaticPlot
 from bayopt.plot.staticplot import BarPlot
 from bayopt.plot.staticplot import HeatMap
@@ -112,6 +115,24 @@ def plot_experiments(function_name, dim, method, is_median=False, iter_check=Non
         plot_all.finish(option=function_name + '_' + '_mean')
 
 
+def plot_experiments_theta(function_name, dim, method, dirname=None):
+    experiments = load_files(
+        function_name=function_name, start=None, end=None, dim=dim, feature=method, dirname=dirname)
+
+    for idx, expt in enumerate(experiments):
+        data = load_theta_data(expt, None)
+        _plot_theta(function_name, dim, dim + str(idx), data)
+
+
+def plot_experiments_mask(function_name, dim, method, dirname=None):
+    experiments = load_files(
+        function_name=function_name, start=None, end=None, dim=dim, feature=method, dirname=dirname)
+
+    for idx, expt in enumerate(experiments):
+        data = load_mask_data(expt, None)
+        _plot_mask(function_name, dim, dim + str(idx), data)
+
+
 def plot_experiment_evaluation(function_name, dim, method, created_at, update_check=None, maximize=True, high=None, low=None):
     evaluation = load_experiments_evaluation(
         function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
@@ -134,15 +155,38 @@ def plot_experiment_evaluation(function_name, dim, method, created_at, update_ch
     plot.finish(option=function_name + '_' + method)
 
 
-def plot_experiment_theta(function_name, dim, method, created_at, update_check=None):
+def plot_experiment_theta(function_name, dim, method, created_at, update_check=None, option=None):
     theta = load_experiments_theta(
         function_name=function_name, dim=dim, feature=method, created_at=created_at, update_check=update_check
     )
 
+    _plot_theta(function_name, dim, option, theta)
+
+
+def _plot_theta(function_name, dim, option, theta):
     heat_map = HeatMap()
 
     heat_map.add_data_set(data=pivot_table(theta, value='theta', columns='iteration', index='dimension'), space=(0, 1))
-    heat_map.finish(option=function_name + '_' + dim + '_theta')
+    if option is None:
+        option = function_name + '_' + dim + '_theta'
+
+    heat_map.finish(option=option)
+
+
+def _plot_mask(function_name, dim, option, mask):
+    mask = to_zero_one(mask)
+
+    mask = np.sum(mask, axis=0)
+
+    x, y = histogram(data=mask, start=0.0, stop=np.max(mask), step=1)
+
+    plot = BarPlot()
+    plot.add_data_set(x=x, y=y)
+
+    if option is None:
+        option = function_name + '_' + dim + '_mask'
+
+    plot.finish(option=option)
 
 
 def plot_experiment_theta_histogram(function_name, dim, method, created_at, update_idx=None, update_check=None):

@@ -9,7 +9,8 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (0, np.pi), 'dimensiona
           {'name': 'x4', 'type': 'continuous', 'domain': (0, np.pi), 'dimensionality': 1},
           ]
 
-dim = len(domain)
-f = MichalewiczFunction(dimensionality=dim)
-method = BayesianOptimizationExt(f=f, domain=domain, maximize=False, ard=False)
-method.run_optimization(max_iter=100)
+for _ in range(1):
+    dim = len(domain)
+    f = MichalewiczFunction(dimensionality=dim)
+    method = BayesianOptimizationExt(f=f, domain=domain, maximize=False, ard=False)
+    method.run_optimization(max_iter=500)
