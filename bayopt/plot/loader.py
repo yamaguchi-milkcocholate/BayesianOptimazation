@@ -7,9 +7,9 @@ import csv
 import numpy as np
 
 
-def load_experiments(function_name, dim, feature, start=None, end=None, iter_check=None):
+def load_experiments(function_name, dim, feature, start=None, end=None, iter_check=None, dirname=None):
     experiments = load_files(
-        function_name=function_name, start=start, end=end, dim=dim, feature=feature)
+        function_name=function_name, start=start, end=end, dim=dim, feature=feature, dirname=dirname)
 
     results = list()
     for expt in experiments:
@@ -24,7 +24,6 @@ def load_experiments(function_name, dim, feature, start=None, end=None, iter_che
                 raise ValueError('iterations is not enough')
 
         results.append(y)
-        print(expt)
 
     results = make_uniform_by_length(results)
 
@@ -132,14 +131,14 @@ def csv_to_numpy(file, header=True, dtype='float'):
         return np.array(y, dtype=np.str)
 
 
-def load_files(function_name, start=None, end=None, **kwargs):
-    """
-    :param function_name: string
-    :param start: string
-    :param end:  string
-    :return: list
-    """
-    storage_dir = definitions.ROOT_DIR + '/storage/' + function_name
+def load_files(function_name, start=None, end=None, dirname=None, **kwargs):
+    print(dirname)
+    if dirname:
+        storage_dir = definitions.ROOT_DIR + '/storage/' + function_name + '/' + dirname
+    else:
+        storage_dir = definitions.ROOT_DIR + '/storage/' + function_name
+
+    print(storage_dir)
     experiments = os.listdir(storage_dir)
 
     masked = list()

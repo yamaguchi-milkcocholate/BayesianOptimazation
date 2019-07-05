@@ -35,7 +35,8 @@ def plot_experiments(function_name, dim, method, is_median=False, iter_check=Non
                 end=end,
                 dim=d,
                 feature=fill,
-                iter_check=iter_check
+                iter_check=iter_check,
+                dirname=dirname
             )
 
             if len(results) == 0:
