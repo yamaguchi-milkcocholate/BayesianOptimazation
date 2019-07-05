@@ -16,8 +16,8 @@ from bayopt.plot.stats import count_true
 import numpy as np
 
 
-def plot_experiments(function_name, dim, method, is_median=False, iter_check=None,
-                     maximize=True, start=None, end=None, iteration=None, high=None, low=None):
+def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None,
+                     maximize=True, start=None, end=None, iteration=None, dirname=None, label=None):
 
     if isinstance(dim, str):
         dim = [dim]
@@ -85,7 +85,16 @@ def plot_experiments(function_name, dim, method, is_median=False, iter_check=Non
     plot_all = StaticPlot()
 
     for key, data_ in data.items():
-        plot_all.add_data_set(x=data_['x_axis'], y=data_['prediction'], label=key)
+
+        if isinstance(label, dict):
+            if key in label.keys():
+                label_ = label[key]
+            else:
+                label_ = key
+        else:
+            label_ = key
+
+        plot_all.add_data_set(x=data_['x_axis'], y=data_['prediction'], label=label_)
         plot_all.add_confidential_area(x=data_['x_axis'],
                                        upper_confidential_bound=data_['upper'], lower_confidential_bound=data_['lower'])
 
