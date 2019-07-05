@@ -16,8 +16,6 @@ from bayopt.plot.stats import count_true
 import numpy as np
 
 
-def plot_experiments(function_name, dim, method, is_median=False, single=False, iter_check=None,
-                     maximize=True, start=None, end=None, iteration=None, dirname=None, high=None, low=None, label=None):
 def plot_experiments(function_name, dim, method, is_median=False, iter_check=None,
                      maximize=True, start=None, end=None, iteration=None, dirname=None,
                      high=None, low=None, label=None):
