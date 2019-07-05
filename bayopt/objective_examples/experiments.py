@@ -57,7 +57,7 @@ class AlpineFunction:
     function_name = 'Alpine function'
 
     def __init__(self, dimensionality, dropout=None):
-        def separable(xi): return np.abs(xi * np.sign(xi) + 0.1 * xi)
+        def separable(xi): return np.abs(xi * np.sin(xi) + 0.1 * xi)
         self.separable = separable
         self.dimensionality = dimensionality
 
@@ -98,8 +98,30 @@ class RosenbrockFunction:
         else:
             raise ValueError()
 
-        y = np.sum([self.sub_func(x[i], x[i + 1]) for i in range(len(x) - 1)])
-        return y
+        return np.sum([self.sub_func(x[i], x[i + 1]) for i in range(len(x) - 1)])
+
+    def get_function_name(self):
+        return self.function_name
+
+
+class MichalewiczFunction:
+
+    function_name = 'Michalewicz function'
+
+    def __init__(self, dimensionality, m=10):
+        def sub_func(xi, i): return np.sin(xi) * (np.sin(i * xi * xi / np.pi) ** (2 * m))
+        self.sub_func = sub_func
+        self.dimensionality = dimensionality
+
+    def __call__(self, x):
+        if x.shape[0] is 1 and x.shape[1] is self.dimensionality:
+            x = x[0]
+        elif x.shape[0] is self.dimensionality:
+            x = x
+        else:
+            raise ValueError()
+
+        return -1 * np.sum([self.sub_func(x[i], i + 1) for i in range(len(x))])
 
     def get_function_name(self):
         return self.function_name
