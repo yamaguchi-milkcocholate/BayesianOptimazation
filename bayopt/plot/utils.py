@@ -176,9 +176,9 @@ def _plot_theta(function_name, dim, option, theta):
 def _plot_mask(function_name, dim, option, mask):
     mask = to_zero_one(mask)
 
-    mask = np.sum(mask, axis=0)
+    y = np.sum(mask, axis=0)
 
-    x, y = histogram(data=mask, start=0.0, stop=np.max(mask), step=1)
+    x = np.array([i + 1 for i in range(len(y))])
 
     plot = BarPlot()
     plot.add_data_set(x=x, y=y)

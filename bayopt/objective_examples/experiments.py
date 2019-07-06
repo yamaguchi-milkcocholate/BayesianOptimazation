@@ -135,3 +135,6 @@ class MichalewiczFunction(TestFunctionBase):
         x = self.to_vector(x=x)
 
         return -1 * np.sum([self.sub_func(x[i], i + 1) for i in range(len(x))])
+
+    def get_function_name(self):
+        return self.FUNCTION_NAME + str(self.dimensionality) + '-' + str(len(self.active_dimension))

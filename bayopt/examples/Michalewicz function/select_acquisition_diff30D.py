@@ -1,4 +1,4 @@
-from bayopt.methods.bo import BayesianOptimizationExt
+from bayopt.methods.select import SelectAcquisitionDiff
 from bayopt.objective_examples.experiments import MichalewiczFunction
 import numpy as np
 
@@ -34,9 +34,19 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (0, np.pi), 'dimensiona
           {'name': 'x29', 'type': 'continuous', 'domain': (0, np.pi), 'dimensionality': 1},
           ]
 
-for i in range(1):
+
+for i in range(5):
 
     dim = len(domain)
-    f = MichalewiczFunction(dimensionality=dim)
-    method = BayesianOptimizationExt(f=f, domain=domain, maximize=False, ard=False)
-    method.run_optimization(max_iter=500)
+    fill_in_strategy = 'copy'
+    f = MichalewiczFunction(dimensionality=dim, dropout=[i for i in range(dim) if i % 2 == 1])
+    method = SelectAcquisitionDiff(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=False,
+                                   theta=15 / dim, eta=1 / dim)
+    method.run_optimization(max_iter=500, eps=0)
+
+    dim = len(domain)
+    fill_in_strategy = 'mix'
+    f = MichalewiczFunction(dimensionality=dim, dropout=[i for i in range(dim) if i % 2 == 1])
+    method = SelectAcquisitionDiff(f=f, domain=domain, fill_in_strategy=fill_in_strategy, maximize=False,
+                                   theta=15 / dim, eta=1 / dim)
+    method.run_optimization(max_iter=500, eps=0)
