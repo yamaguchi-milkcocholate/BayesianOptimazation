@@ -34,7 +34,7 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (1, 4), 'dimensionality
           ]
 
 
-for i in range(1):
+for i in range(10):
 
     dim = len(domain)
     fill_in_strategy = 'random'
