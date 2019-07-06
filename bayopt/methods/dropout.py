@@ -485,3 +485,56 @@ class Dropout(BO):
 
             file.write('----------------------------------------------------------------------------------------------\n')
             file.close()
+
+
+class SmoothingDropout(Dropout):
+
+    def __init__(self, fill_in_strategy, f, mix=0.5, domain=None, constraints=None, cost_withGradients=None, X=None,
+                 Y=None, subspace_dim_size=0,
+                 model_type='GP', initial_design_numdata=1, initial_design_type='random', acquisition_type='LCB',
+                 normalize_Y=True, exact_feval=False, acquisition_optimizer_type='lbfgs', model_update_interval=1,
+                 evaluator_type='sequential', batch_size=1, maximize=False, de_duplication=False):
+
+        super().__init__(fill_in_strategy=fill_in_strategy, f=f, mix=mix, domain=domain, constraints=constraints,
+                         cost_withGradients=cost_withGradients, X=X, Y=Y, subspace_dim_size=subspace_dim_size,
+                         model_type=model_type, initial_design_numdata=initial_design_numdata,
+                         initial_design_type=initial_design_type,acquisition_type=acquisition_type,
+                         normalize_Y=normalize_Y, exact_feval=exact_feval,
+                         acquisition_optimizer_type=acquisition_optimizer_type,
+                         model_update_interval=model_update_interval, evaluator_type=evaluator_type,
+                         batch_size=batch_size, maximize=maximize, de_duplication=de_duplication)
+
+        if self.dimensionality % self.subspace_dim_size is not 0:
+            raise ValueError()
+
+        self.subspace_idx_stack = list()
+        self.log_masks = list()
+
+    def update_subspace(self):
+        if len(self.subspace_idx_stack) == 0:
+            self.subspace_idx_stack = [i for i in range(self.dimensionality)]
+
+        self.subspace_idx = np.sort(np.random.choice(
+            self.subspace_idx_stack,
+            self.subspace_dim_size, replace=False))
+
+        self.log_masks.append([True if i in self.subspace_idx else False for i in range(self.dimensionality)])
+
+        self.subspace_idx_stack = [idx for idx in self.subspace_idx_stack if idx not in self.subspace_idx]
+
+        self.subspace = get_subspace(space=self.space, subspace_idx=self.subspace_idx)
+
+    def _save(self):
+        mkdir_when_not_exist(abs_path=definitions.ROOT_DIR + '/storage/' + self.objective_name)
+
+        dir_name = definitions.ROOT_DIR + '/storage/' + self.objective_name + '/' + now_str() + ' ' \
+                   + str(self.dimensionality) + 'D-' + str(self.subspace_dim_size) + 'D_smooth ' + str(self.fill_in_strategy)
+        mkdir_when_not_exist(abs_path=dir_name)
+
+        self.save_report(report_file=dir_name + '/report.txt')
+        self.save_evaluations(evaluations_file=dir_name + '/evaluation.csv')
+        self.save_models(models_file=dir_name + '/model.csv')
+        self.save_mask(mask_file=dir_name + '/mask.csv')
+
+    def save_mask(self, mask_file):
+        self._write_csv(mask_file, self.log_masks)

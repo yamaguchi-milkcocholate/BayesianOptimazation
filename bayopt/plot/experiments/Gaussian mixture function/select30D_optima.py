@@ -2,13 +2,11 @@ from bayopt.plot.utils import plot_experiments
 
 
 plot_experiments(
-    function_name='Gaussian mixture function', dim=['30D_e0033t0500'],
-    method=['copy_select_acquisition_diff', 'copy_select_objective', 'mix_select_objective',
-            'mix_select_acquisition_diff'],
-    maximize=True, is_median=False, start=None, end=None)
+    function_name='Gaussian mixture function', dim=['30D_e0033t0500', '30D-25D', '30D'],
+    method=['copy', 'mix', 'bo', 'copy_select_acquisition_diff', 'mix_select_acquisition_diff'],
+    maximize=True, is_median=False, start=None, end=None, dirname='dropout30D-25D_acqdiff')
 
 plot_experiments(
-    function_name='Gaussian mixture function', dim=['30D_e0033t0500'],
-    method=['copy_select_acquisition_diff', 'copy_select_objective', 'mix_select_objective',
-            'mix_select_acquisition_diff'],
-    maximize=True, is_median=True, start=None, end=None)
+    function_name='Gaussian mixture function', dim=['30D_e0033t0500', '30D-25D', '30D'],
+    method=['copy', 'mix', 'bo', 'copy_select_acquisition_diff', 'mix_select_acquisition_diff'],
+    maximize=True, is_median=True, start=None, end=None,  dirname='dropout30D-25D_acqdiff')

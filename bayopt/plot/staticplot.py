@@ -25,7 +25,7 @@ class StaticPlot(Plot):
         if len(upper_confidential_bound) != len(lower_confidential_bound):
             raise ValueError()
 
-        self._plt.fill_between(x, lower_confidential_bound, upper_confidential_bound, alpha=0.25)
+        self._plt.fill_between(x, lower_confidential_bound, upper_confidential_bound, alpha=0.2)
 
     def set_y(self, low_lim=None, high_lim=None):
         if low_lim is not None and high_lim is not None:
