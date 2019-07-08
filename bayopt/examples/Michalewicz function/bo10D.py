@@ -14,7 +14,7 @@ domain = [{'name': 'x0', 'type': 'continuous', 'domain': (0, np.pi), 'dimensiona
           {'name': 'x9', 'type': 'continuous', 'domain': (0, np.pi), 'dimensionality': 1},
           ]
 
-for i in range(1):
+for i in range(2):
 
     dim = len(domain)
     f = MichalewiczFunction(dimensionality=dim)
