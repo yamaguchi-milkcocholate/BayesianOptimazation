@@ -121,7 +121,7 @@ def plot_experiments_theta(function_name, dim, method, dirname=None):
 
     for idx, expt in enumerate(experiments):
         data = load_theta_data(expt, None)
-        _plot_theta(function_name, dim, dim + str(idx), data)
+        _plot_theta(function_name, dim, dim + str(idx) + method, data)
 
 
 def plot_experiments_mask(function_name, dim, method, dirname=None):
@@ -130,7 +130,7 @@ def plot_experiments_mask(function_name, dim, method, dirname=None):
 
     for idx, expt in enumerate(experiments):
         data = load_mask_data(expt, None)
-        _plot_mask(function_name, dim, dim + str(idx), data)
+        _plot_mask(function_name, dim, dim + str(idx) + method, data)
 
 
 def plot_experiment_evaluation(function_name, dim, method, created_at, update_check=None, maximize=True, high=None, low=None):
