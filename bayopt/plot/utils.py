@@ -6,9 +6,7 @@ from bayopt.plot.loader import load_experiments_evaluation
 from bayopt.plot.loader import load_files
 from bayopt.plot.loader import load_theta_data
 from bayopt.plot.loader import load_mask_data
-from bayopt.plot.staticplot import StaticPlot
-from bayopt.plot.staticplot import BarPlot
-from bayopt.plot.staticplot import HeatMap
+from bayopt.plot.plot import StaticPlot, BarPlot, HeatMap
 from bayopt.plot.stats import maximum_locus
 from bayopt.plot.stats import minimum_locus
 from bayopt.plot.stats import with_confidential
