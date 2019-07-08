@@ -1,6 +1,6 @@
 from bayopt import definitions
 from bayopt.clock.clock import from_str
-from bayopt.utils.utils import rmdir_when_any
+from bayopt.utils import rmdir_when_any
 import pandas as pd
 import os
 import csv

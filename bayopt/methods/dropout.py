@@ -13,7 +13,7 @@ from bayopt.space.space import get_subspace
 from bayopt.clock.stopwatch import StopWatch
 from bayopt.clock.clock import now_str
 from bayopt import definitions
-from bayopt.utils.utils import mkdir_when_not_exist
+from bayopt.utils import mkdir_when_not_exist
 from copy import deepcopy
 import numpy as np
 

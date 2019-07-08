@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 from bayopt import definitions
 from bayopt.clock import clock
-from bayopt.utils.utils import mkdir_when_not_exist
+from bayopt.utils import mkdir_when_not_exist
 
 
 class Plot(ABC):

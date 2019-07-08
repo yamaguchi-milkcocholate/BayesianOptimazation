@@ -2,7 +2,7 @@ from GPyOpt.methods.bayesian_optimization import BayesianOptimization
 from GPyOpt.core.errors import InvalidConfigError
 from bayopt.clock.clock import now_str
 from bayopt import definitions
-from bayopt.utils.utils import mkdir_when_not_exist
+from bayopt.utils import mkdir_when_not_exist
 import GPyOpt
 import numpy as np
 import time
